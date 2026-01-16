@@ -58,16 +58,38 @@
             width: 150px;
             height: 100px;
             display: flex;
-            flex-wrap: wrap;
             justify-content: center;
             align-items: center;
             z-index: 2;
-            opacity: 0.8;
+            opacity: 0.9;
+            pointer-events: none;
+        }
+
+        /* O Número Gigante na Barriga */
+        #belly-counter {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 2px 2px 0 #000;
+            z-index: 10;
+            position: absolute;
+        }
+
+        /* Container para as frutinhas comidas ficarem atrás do número */
+        #eaten-fruits-visuals {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            opacity: 0.5; /* Um pouco mais transparentes para destacar o número */
         }
 
         .eaten-fruit {
-            width: 40px !important;
-            height: 40px !important;
+            width: 30px !important;
+            height: 30px !important;
             position: relative !important;
             transform: none !important;
             margin: 2px;
@@ -164,6 +186,16 @@
             80% { transform: scale(1.2); }
             100% { transform: scale(1); }
         }
+        
+        @keyframes numberPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.5); }
+            100% { transform: scale(1); }
+        }
+        
+        .number-pop {
+            animation: numberPop 0.3s ease-out;
+        }
     </style>
 </head>
 <body>
@@ -172,7 +204,7 @@
     <div id="start-screen">
         <h1 style="color:white; margin-bottom: 20px;">O Monstro Comilão</h1>
         <button onclick="startGame()">JOGAR</button>
-        <p style="color:white; margin-top:20px; font-size: 0.8rem;">Para a filha do Jacson ❤️</p>
+        <p style="color:white; margin-top:20px; font-size: 0.8rem;">Para a Lavine ❤️</p>
     </div>
 
     <!-- ÁREA DO JOGO -->
@@ -189,7 +221,10 @@
             <div id="mouth-sensor"></div>
             
             <!-- Barriga Transparente -->
-            <div id="belly-container"></div>
+            <div id="belly-container">
+                <div id="eaten-fruits-visuals"></div>
+                <div id="belly-counter"></div>
+            </div>
 
             <svg viewBox="0 0 300 350" xmlns="http://www.w3.org/2000/svg">
                 <!-- Corpo -->
@@ -228,7 +263,7 @@
             'uva': { color: '#8e44ad', shape: '<circle cx="35" cy="50" r="10" fill="#8e44ad"/><circle cx="25" cy="35" r="10" fill="#8e44ad"/><circle cx="45" cy="35" r="10" fill="#8e44ad"/><circle cx="35" cy="20" r="10" fill="#8e44ad"/>' }
         };
 
-        const maxNumber = 6; // Máximo de frutas para pedir (para caber na tela do celular)
+        const maxNumber = 6; // Máximo de frutas para pedir
         let currentTarget = 0;
         let currentFruitType = '';
         let currentCount = 0;
@@ -236,26 +271,28 @@
 
         // Elementos DOM
         const instructionText = document.getElementById('instruction-text');
-        const bellyContainer = document.getElementById('belly-container');
+        const bellyCounter = document.getElementById('belly-counter');
+        const eatenFruitsVisuals = document.getElementById('eaten-fruits-visuals');
         const monsterContainer = document.getElementById('monster-container');
         const gameContainer = document.getElementById('game-container');
         const mouthSensor = document.getElementById('mouth-sensor');
 
-        // --- SISTEMA DE ÁUDIO (Web Audio API para efeitos, SpeechSynthesis para voz) ---
+        // --- SISTEMA DE ÁUDIO ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
         function speak(text) {
-            // Cancela falas anteriores
             window.speechSynthesis.cancel();
             
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'pt-BR';
             utterance.rate = 1.0; 
-            utterance.pitch = 1.2; // Voz um pouco mais fina/infantil
+            utterance.pitch = 1.0; 
             
-            // Tenta forçar uma voz feminina/infantil se disponível
+            // Tenta pegar a melhor voz disponível
             const voices = window.speechSynthesis.getVoices();
-            const ptVoice = voices.find(v => v.lang.includes('pt-BR'));
+            // Tenta priorizar vozes do Google ou Samsung
+            const ptVoice = voices.find(v => v.lang.includes('pt-BR') && (v.name.includes('Google') || v.name.includes('Luciana')));
+            
             if(ptVoice) utterance.voice = ptVoice;
 
             window.speechSynthesis.speak(utterance);
@@ -271,7 +308,6 @@
             gainNode.connect(audioCtx.destination);
 
             if (type === 'eat') {
-                // Som de "Nham" (onda quadrada curta com pitch descendente)
                 osc.type = 'triangle';
                 osc.frequency.setValueAtTime(400, audioCtx.currentTime);
                 osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
@@ -280,11 +316,9 @@
                 osc.start();
                 osc.stop(audioCtx.currentTime + 0.1);
             } else if (type === 'burp') {
-                // Som de arroto (dente de serra grave e longo)
                 osc.type = 'sawtooth';
                 osc.frequency.setValueAtTime(150, audioCtx.currentTime);
                 osc.frequency.linearRampToValueAtTime(50, audioCtx.currentTime + 0.5);
-                // Modulação tremida para parecer um arroto
                 gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
                 gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5);
                 osc.start();
@@ -296,6 +330,15 @@
                 gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
                 osc.start();
                 osc.stop(audioCtx.currentTime + 0.1);
+            } else if (type === 'success') {
+                // Som agradável de acerto (Trrrrrim)
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(1000, audioCtx.currentTime + 0.2);
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.2);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.2);
             }
         }
 
@@ -312,7 +355,8 @@
         function newRound() {
             isPlaying = true;
             currentCount = 0;
-            bellyContainer.innerHTML = ''; // Esvazia a barriga
+            bellyCounter.innerText = ''; // Limpa contador
+            eatenFruitsVisuals.innerHTML = ''; // Limpa visuais
 
             // Remove frutas antigas da tela
             document.querySelectorAll('.fruit').forEach(el => el.remove());
@@ -331,13 +375,11 @@
                 speak(`Eu quero ${currentTarget} ${currentFruitType}${plural}`);
             }, 500);
 
-            // Gera frutas espalhadas (mais do que o necessário para ela ter que escolher)
             spawnFruits();
         }
 
         function spawnFruits() {
-            const totalFruitsToSpawn = 10; // Sempre 10 frutas na tela para ter variedade
-            
+            const totalFruitsToSpawn = 10;
             for(let i=0; i<totalFruitsToSpawn; i++) {
                 createFruitElement(i);
             }
@@ -347,13 +389,10 @@
             const el = document.createElement('div');
             el.className = 'fruit';
             
-            // Define se essa fruta é a correta ou uma distração
-            // Garante que tenha pelo menos o número alvo de frutas corretas
             let type;
             if (index < currentTarget) {
                 type = currentFruitType;
             } else {
-                // Aleatório
                 const types = Object.keys(fruitsData);
                 type = types[Math.floor(Math.random() * types.length)];
             }
@@ -361,69 +400,53 @@
             el.dataset.type = type;
             el.innerHTML = `<svg viewBox="0 0 70 70">${fruitsData[type].shape}</svg>`;
 
-            // Posicionamento aleatório (evitando o centro onde está o monstro)
             const x = Math.random() * (window.innerWidth - 80);
             const y = Math.random() * (window.innerHeight - 100);
-            
-            // Se cair muito perto do centro (monstro), move para as bordas
-            // Simples verificação
             const centerX = window.innerWidth / 2;
             const centerY = window.innerHeight / 2;
             
-            // Estilos iniciais
             el.style.left = x + 'px';
-            
-            // Tenta colocar frutas na parte de baixo ou muito em cima para não cobrir a cara do monstro
             if (y > centerY - 150 && y < centerY + 150) {
                  el.style.top = (y > centerY ? centerY + 160 : centerY - 200) + 'px';
             } else {
                 el.style.top = y + 'px';
             }
 
-            // Animação de entrada
             el.style.animation = 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-
-            // Eventos de Touch e Mouse
             addDragEvents(el);
-
             gameContainer.appendChild(el);
         }
 
-        // --- SISTEMA DE DRAG AND DROP (ARRASTAR) ---
         function addDragEvents(el) {
             let startX, startY, initialLeft, initialTop;
 
             function onStart(e) {
-                e.preventDefault(); // Impede scroll
+                e.preventDefault();
                 const touch = e.type === 'touchstart' ? e.touches[0] : e;
                 startX = touch.clientX;
                 startY = touch.clientY;
                 initialLeft = el.offsetLeft;
                 initialTop = el.offsetTop;
                 
-                el.style.zIndex = 1000; // Traz para frente
+                el.style.zIndex = 1000;
                 
                 function onMove(moveEvent) {
                     const moveTouch = moveEvent.type === 'touchmove' ? moveEvent.touches[0] : moveEvent;
                     const dx = moveTouch.clientX - startX;
                     const dy = moveTouch.clientY - startY;
-                    
                     el.style.left = (initialLeft + dx) + 'px';
                     el.style.top = (initialTop + dy) + 'px';
                 }
 
                 function onEnd(endEvent) {
-                    // Remove listeners
                     document.removeEventListener('mousemove', onMove);
                     document.removeEventListener('mouseup', onEnd);
                     document.removeEventListener('touchmove', onMove);
                     document.removeEventListener('touchend', onEnd);
-                    
                     el.style.zIndex = 10;
                     checkDrop(el);
                 }
 
-                // Adiciona listeners globais para o movimento fluir mesmo se sair do elemento
                 document.addEventListener('mousemove', onMove);
                 document.addEventListener('mouseup', onEnd);
                 document.addEventListener('touchmove', onMove, {passive: false});
@@ -439,21 +462,15 @@
 
             const mouthRect = mouthSensor.getBoundingClientRect();
             const fruitRect = el.getBoundingClientRect();
-
-            // Centro da fruta
             const fruitCenterX = fruitRect.left + fruitRect.width / 2;
             const fruitCenterY = fruitRect.top + fruitRect.height / 2;
 
-            // Verifica se o centro da fruta está dentro da boca
             if (fruitCenterX >= mouthRect.left && fruitCenterX <= mouthRect.right &&
                 fruitCenterY >= mouthRect.top && fruitCenterY <= mouthRect.bottom) {
                 
-                // Se for a fruta certa
                 if (el.dataset.type === currentFruitType) {
                     eatFruit(el);
                 } else {
-                    // Fruta errada: volta para o lugar ou faz som de erro?
-                    // Para crianças pequenas, apenas "rejeitamos" suavemente
                     speak("Não, essa não!");
                     playSound('pop');
                 }
@@ -461,29 +478,33 @@
         }
 
         function eatFruit(el) {
-            // Remove os eventos de arrastar clonando o nó
             const clone = el.cloneNode(true);
-            el.remove(); // Remove o original do container principal
+            el.remove();
             
-            // Adiciona na barriga
             clone.className = 'eaten-fruit';
             clone.style.position = 'relative';
             clone.style.left = '0';
             clone.style.top = '0';
             clone.style.zIndex = '1';
             
-            bellyContainer.appendChild(clone);
+            eatenFruitsVisuals.appendChild(clone);
             
-            // Feedback
             playSound('eat');
-            speak("Nham!");
             
-            // Olhos seguem (efeito simples)
+            // ATUALIZAÇÃO DO CONTADOR VISUAL
+            currentCount++;
+            bellyCounter.innerText = currentCount;
+            
+            // Efeito visual no número
+            bellyCounter.classList.remove('number-pop');
+            void bellyCounter.offsetWidth; // trigger reflow
+            bellyCounter.classList.add('number-pop');
+
+            // Feedback de áudio limpo - fala o número
+            speak(currentCount.toString());
+            
             moveEyes();
 
-            currentCount++;
-            
-            // Verifica vitória
             if (currentCount >= currentTarget) {
                 completeLevel();
             }
@@ -493,10 +514,11 @@
             isPlaying = false;
             playSound('burp');
             monsterContainer.classList.add('burping');
-            instructionText.innerText = "Que delícia!";
+            instructionText.innerText = "Muito Bem!";
             
             setTimeout(() => {
-                speak("Arrrg! Que delícia! Quero mais!");
+                // Fala mais limpa, sem onomatopeias robóticas
+                speak("Que delícia! Quero mais!");
                 monsterContainer.classList.remove('burping');
                 setTimeout(newRound, 2000);
             }, 1000);
@@ -505,7 +527,6 @@
         function moveEyes() {
             const leftEye = document.getElementById('eye-left');
             const rightEye = document.getElementById('eye-right');
-            // Pisca ou move levemente
             leftEye.setAttribute('cy', 110);
             rightEye.setAttribute('cy', 110);
             setTimeout(() => {
