@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>O Monstro Comilão</title>
+    <style>
+        /* --- ESTILOS GERAIS --- */
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #f0f8ff; /* Azul clarinho agradável */
+            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif; /* Fonte infantil */
+            touch-action: none; /* Impede rolagem da tela no celular */
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* --- O MONSTRO --- */
+        #monster-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 350px;
+            z-index: 1;
+            pointer-events: none; /* Deixa o toque passar para as frutas se precisarem passar por cima */
+        }
+
+        /* Área da boca para detecção de colisão */
+        #mouth-sensor {
+            position: absolute;
+            top: 80px;
+            left: 75px;
+            width: 150px;
+            height: 80px;
+            /* border: 2px solid red;  Descomente para ver a área de colisão */
+            z-index: 5;
+        }
+
+        /* Barriga onde as frutas ficam */
+        #belly-container {
+            position: absolute;
+            bottom: 30px;
+            left: 75px;
+            width: 150px;
+            height: 100px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            z-index: 2;
+            opacity: 0.8;
+        }
+
+        .eaten-fruit {
+            width: 40px !important;
+            height: 40px !important;
+            position: relative !important;
+            transform: none !important;
+            margin: 2px;
+            transition: all 0.5s ease;
+        }
+
+        /* --- FRUTAS --- */
+        .fruit {
+            width: 70px;
+            height: 70px;
+            position: absolute;
+            cursor: grab;
+            z-index: 10;
+            filter: drop-shadow(3px 3px 2px rgba(0,0,0,0.2));
+            transition: transform 0.1s;
+        }
+
+        .fruit:active {
+            cursor: grabbing;
+            transform: scale(1.1);
+        }
+
+        /* --- UI (TEXTOS E BOTÕES) --- */
+        #ui-layer {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            text-align: center;
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        #instruction-text {
+            font-size: 2rem;
+            color: #333;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px 20px;
+            border-radius: 20px;
+            display: inline-block;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        #target-number {
+            font-weight: bold;
+            color: #e74c3c;
+            font-size: 3rem;
+        }
+
+        #start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        button {
+            background: #2ecc71;
+            border: none;
+            padding: 20px 40px;
+            font-size: 1.5rem;
+            color: white;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #27ae60;
+            font-family: inherit;
+        }
+        button:active {
+            transform: translateY(5px);
+            box-shadow: none;
+        }
+
+        /* --- ANIMAÇÕES --- */
+        @keyframes burpShake {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            25% { transform: translate(-52%, -48%) rotate(-5deg) scale(1.1); }
+            50% { transform: translate(-48%, -52%) rotate(5deg) scale(1.1); }
+            75% { transform: translate(-52%, -48%) rotate(-5deg) scale(1.1); }
+            100% { transform: translate(-50%, -50%) rotate(0deg); }
+        }
+
+        .burping {
+            animation: burpShake 0.8s ease-in-out;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            80% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TELA INICIAL -->
+    <div id="start-screen">
+        <h1 style="color:white; margin-bottom: 20px;">O Monstro Comilão</h1>
+        <button onclick="startGame()">JOGAR</button>
+        <p style="color:white; margin-top:20px; font-size: 0.8rem;">Para a filha do Jacson ❤️</p>
+    </div>
+
+    <!-- ÁREA DO JOGO -->
+    <div id="game-container">
+        
+        <!-- TEXTO DE INSTRUÇÃO -->
+        <div id="ui-layer">
+            <div id="instruction-text">Toque em JOGAR!</div>
+        </div>
+
+        <!-- O MONSTRO (SVG INLINE) -->
+        <div id="monster-container">
+            <!-- Sensor Invisível da Boca -->
+            <div id="mouth-sensor"></div>
+            
+            <!-- Barriga Transparente -->
+            <div id="belly-container"></div>
+
+            <svg viewBox="0 0 300 350" xmlns="http://www.w3.org/2000/svg">
+                <!-- Corpo -->
+                <path d="M50 300 Q20 350 80 340 L220 340 Q280 350 250 300 Q280 200 250 100 Q230 20 150 20 Q70 20 50 100 Q20 200 50 300" fill="#7bed9f" stroke="#2ecc71" stroke-width="5"/>
+                
+                <!-- Barriga (Visor) -->
+                <circle cx="150" cy="250" r="60" fill="rgba(255,255,255,0.4)" stroke="#fff" stroke-width="3" />
+                
+                <!-- Olhos -->
+                <circle cx="100" cy="100" r="25" fill="white" />
+                <circle cx="200" cy="100" r="25" fill="white" />
+                <circle id="eye-left" cx="100" cy="100" r="10" fill="black" />
+                <circle id="eye-right" cx="200" cy="100" r="10" fill="black" />
+                
+                <!-- Boca (Aberta) -->
+                <path d="M75 130 Q150 130 225 130 Q225 180 150 180 Q75 180 75 130 Z" fill="#333" />
+                <!-- Dentes -->
+                <path d="M85 130 L95 145 L105 130 M195 130 L205 145 L215 130" stroke="white" stroke-width="3" fill="white"/>
+
+                <!-- Braços -->
+                <path d="M60 200 Q20 220 30 180" stroke="#2ecc71" stroke-width="15" stroke-linecap="round" fill="none"/>
+                <path d="M240 200 Q280 220 270 180" stroke="#2ecc71" stroke-width="15" stroke-linecap="round" fill="none"/>
+            </svg>
+        </div>
+
+        <!-- As frutas serão geradas aqui via Javascript -->
+    </div>
+
+    <!-- SCRIPT DO JOGO -->
+    <script>
+        // --- CONFIGURAÇÕES ---
+        const fruitsData = {
+            'morango': { color: '#e74c3c', shape: '<path d="M35 10 Q55 10 60 25 Q65 60 35 70 Q5 60 10 25 Q15 10 35 10 Z" fill="#e74c3c"/><path d="M35 10 L30 5 M35 10 L40 5 M35 10 L35 2" stroke="green" stroke-width="3"/>' },
+            'banana': { color: '#f1c40f', shape: '<path d="M10 50 Q35 70 60 20 Q65 15 60 15 Q40 60 10 40 Z" fill="#f1c40f" stroke="#f39c12" stroke-width="2"/>' },
+            'maçã': { color: '#c0392b', shape: '<circle cx="35" cy="40" r="25" fill="#c0392b"/><path d="M35 15 Q45 5 45 15" fill="none" stroke="green" stroke-width="3"/>' },
+            'uva': { color: '#8e44ad', shape: '<circle cx="35" cy="50" r="10" fill="#8e44ad"/><circle cx="25" cy="35" r="10" fill="#8e44ad"/><circle cx="45" cy="35" r="10" fill="#8e44ad"/><circle cx="35" cy="20" r="10" fill="#8e44ad"/>' }
+        };
+
+        const maxNumber = 6; // Máximo de frutas para pedir (para caber na tela do celular)
+        let currentTarget = 0;
+        let currentFruitType = '';
+        let currentCount = 0;
+        let isPlaying = false;
+
+        // Elementos DOM
+        const instructionText = document.getElementById('instruction-text');
+        const bellyContainer = document.getElementById('belly-container');
+        const monsterContainer = document.getElementById('monster-container');
+        const gameContainer = document.getElementById('game-container');
+        const mouthSensor = document.getElementById('mouth-sensor');
+
+        // --- SISTEMA DE ÁUDIO (Web Audio API para efeitos, SpeechSynthesis para voz) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function speak(text) {
+            // Cancela falas anteriores
+            window.speechSynthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'pt-BR';
+            utterance.rate = 1.0; 
+            utterance.pitch = 1.2; // Voz um pouco mais fina/infantil
+            
+            // Tenta forçar uma voz feminina/infantil se disponível
+            const voices = window.speechSynthesis.getVoices();
+            const ptVoice = voices.find(v => v.lang.includes('pt-BR'));
+            if(ptVoice) utterance.voice = ptVoice;
+
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            if (type === 'eat') {
+                // Som de "Nham" (onda quadrada curta com pitch descendente)
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.1);
+            } else if (type === 'burp') {
+                // Som de arroto (dente de serra grave e longo)
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(50, audioCtx.currentTime + 0.5);
+                // Modulação tremida para parecer um arroto
+                gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.5);
+            } else if (type === 'pop') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.1);
+            }
+        }
+
+        // --- LÓGICA DO JOGO ---
+        function startGame() {
+            document.getElementById('start-screen').style.display = 'none';
+            // Carrega vozes
+            window.speechSynthesis.getVoices();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            newRound();
+        }
+
+        function newRound() {
+            isPlaying = true;
+            currentCount = 0;
+            bellyContainer.innerHTML = ''; // Esvazia a barriga
+
+            // Remove frutas antigas da tela
+            document.querySelectorAll('.fruit').forEach(el => el.remove());
+
+            // Escolhe número e fruta
+            currentTarget = Math.floor(Math.random() * maxNumber) + 1;
+            const types = Object.keys(fruitsData);
+            currentFruitType = types[Math.floor(Math.random() * types.length)];
+
+            // Atualiza texto e fala
+            const plural = currentTarget > 1 ? 's' : '';
+            const textDisplay = `Quero <span id="target-number">${currentTarget}</span> ${capitalize(currentFruitType)}${plural}!`;
+            instructionText.innerHTML = textDisplay;
+            
+            setTimeout(() => {
+                speak(`Eu quero ${currentTarget} ${currentFruitType}${plural}`);
+            }, 500);
+
+            // Gera frutas espalhadas (mais do que o necessário para ela ter que escolher)
+            spawnFruits();
+        }
+
+        function spawnFruits() {
+            const totalFruitsToSpawn = 10; // Sempre 10 frutas na tela para ter variedade
+            
+            for(let i=0; i<totalFruitsToSpawn; i++) {
+                createFruitElement(i);
+            }
+        }
+
+        function createFruitElement(index) {
+            const el = document.createElement('div');
+            el.className = 'fruit';
+            
+            // Define se essa fruta é a correta ou uma distração
+            // Garante que tenha pelo menos o número alvo de frutas corretas
+            let type;
+            if (index < currentTarget) {
+                type = currentFruitType;
+            } else {
+                // Aleatório
+                const types = Object.keys(fruitsData);
+                type = types[Math.floor(Math.random() * types.length)];
+            }
+
+            el.dataset.type = type;
+            el.innerHTML = `<svg viewBox="0 0 70 70">${fruitsData[type].shape}</svg>`;
+
+            // Posicionamento aleatório (evitando o centro onde está o monstro)
+            const x = Math.random() * (window.innerWidth - 80);
+            const y = Math.random() * (window.innerHeight - 100);
+            
+            // Se cair muito perto do centro (monstro), move para as bordas
+            // Simples verificação
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+            
+            // Estilos iniciais
+            el.style.left = x + 'px';
+            
+            // Tenta colocar frutas na parte de baixo ou muito em cima para não cobrir a cara do monstro
+            if (y > centerY - 150 && y < centerY + 150) {
+                 el.style.top = (y > centerY ? centerY + 160 : centerY - 200) + 'px';
+            } else {
+                el.style.top = y + 'px';
+            }
+
+            // Animação de entrada
+            el.style.animation = 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+
+            // Eventos de Touch e Mouse
+            addDragEvents(el);
+
+            gameContainer.appendChild(el);
+        }
+
+        // --- SISTEMA DE DRAG AND DROP (ARRASTAR) ---
+        function addDragEvents(el) {
+            let startX, startY, initialLeft, initialTop;
+
+            function onStart(e) {
+                e.preventDefault(); // Impede scroll
+                const touch = e.type === 'touchstart' ? e.touches[0] : e;
+                startX = touch.clientX;
+                startY = touch.clientY;
+                initialLeft = el.offsetLeft;
+                initialTop = el.offsetTop;
+                
+                el.style.zIndex = 1000; // Traz para frente
+                
+                function onMove(moveEvent) {
+                    const moveTouch = moveEvent.type === 'touchmove' ? moveEvent.touches[0] : moveEvent;
+                    const dx = moveTouch.clientX - startX;
+                    const dy = moveTouch.clientY - startY;
+                    
+                    el.style.left = (initialLeft + dx) + 'px';
+                    el.style.top = (initialTop + dy) + 'px';
+                }
+
+                function onEnd(endEvent) {
+                    // Remove listeners
+                    document.removeEventListener('mousemove', onMove);
+                    document.removeEventListener('mouseup', onEnd);
+                    document.removeEventListener('touchmove', onMove);
+                    document.removeEventListener('touchend', onEnd);
+                    
+                    el.style.zIndex = 10;
+                    checkDrop(el);
+                }
+
+                // Adiciona listeners globais para o movimento fluir mesmo se sair do elemento
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('mouseup', onEnd);
+                document.addEventListener('touchmove', onMove, {passive: false});
+                document.addEventListener('touchend', onEnd);
+            }
+
+            el.addEventListener('mousedown', onStart);
+            el.addEventListener('touchstart', onStart, {passive: false});
+        }
+
+        function checkDrop(el) {
+            if (!isPlaying) return;
+
+            const mouthRect = mouthSensor.getBoundingClientRect();
+            const fruitRect = el.getBoundingClientRect();
+
+            // Centro da fruta
+            const fruitCenterX = fruitRect.left + fruitRect.width / 2;
+            const fruitCenterY = fruitRect.top + fruitRect.height / 2;
+
+            // Verifica se o centro da fruta está dentro da boca
+            if (fruitCenterX >= mouthRect.left && fruitCenterX <= mouthRect.right &&
+                fruitCenterY >= mouthRect.top && fruitCenterY <= mouthRect.bottom) {
+                
+                // Se for a fruta certa
+                if (el.dataset.type === currentFruitType) {
+                    eatFruit(el);
+                } else {
+                    // Fruta errada: volta para o lugar ou faz som de erro?
+                    // Para crianças pequenas, apenas "rejeitamos" suavemente
+                    speak("Não, essa não!");
+                    playSound('pop');
+                }
+            }
+        }
+
+        function eatFruit(el) {
+            // Remove os eventos de arrastar clonando o nó
+            const clone = el.cloneNode(true);
+            el.remove(); // Remove o original do container principal
+            
+            // Adiciona na barriga
+            clone.className = 'eaten-fruit';
+            clone.style.position = 'relative';
+            clone.style.left = '0';
+            clone.style.top = '0';
+            clone.style.zIndex = '1';
+            
+            bellyContainer.appendChild(clone);
+            
+            // Feedback
+            playSound('eat');
+            speak("Nham!");
+            
+            // Olhos seguem (efeito simples)
+            moveEyes();
+
+            currentCount++;
+            
+            // Verifica vitória
+            if (currentCount >= currentTarget) {
+                completeLevel();
+            }
+        }
+
+        function completeLevel() {
+            isPlaying = false;
+            playSound('burp');
+            monsterContainer.classList.add('burping');
+            instructionText.innerText = "Que delícia!";
+            
+            setTimeout(() => {
+                speak("Arrrg! Que delícia! Quero mais!");
+                monsterContainer.classList.remove('burping');
+                setTimeout(newRound, 2000);
+            }, 1000);
+        }
+
+        function moveEyes() {
+            const leftEye = document.getElementById('eye-left');
+            const rightEye = document.getElementById('eye-right');
+            // Pisca ou move levemente
+            leftEye.setAttribute('cy', 110);
+            rightEye.setAttribute('cy', 110);
+            setTimeout(() => {
+                leftEye.setAttribute('cy', 100);
+                rightEye.setAttribute('cy', 100);
+            }, 200);
+        }
+
+        function capitalize(s) {
+            return s.charAt(0).toUpperCase() + s.slice(1);
+        }
+
+    </script>
+</body>
+</html>
