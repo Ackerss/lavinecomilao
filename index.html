@@ -32,20 +32,19 @@
             transform: translate(-50%, -50%);
             width: 300px;
             height: 350px;
-            z-index: 5;
+            z-index: 10; /* Monstro fica numa camada média */
             transition: transform 0.5s ease;
-            pointer-events: none; /* Permite arrastar frutas por cima */
+            pointer-events: none; 
         }
 
         /* Área da boca para detecção */
         #mouth-sensor {
             position: absolute;
-            top: 130px; /* AJUSTADO: Mais para baixo */
+            top: 130px;
             left: 75px;
             width: 150px;
             height: 80px;
-            z-index: 10;
-            /* border: 1px solid red; Descomente para testar área */
+            z-index: 15;
         }
 
         /* --- BARRIGA (VISUAL) --- */
@@ -58,7 +57,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 6;
+            z-index: 12;
             pointer-events: none;
         }
 
@@ -67,7 +66,7 @@
             font-weight: bold;
             color: #fff;
             text-shadow: 2px 2px 0 #000;
-            z-index: 8;
+            z-index: 14;
             position: absolute;
         }
 
@@ -80,7 +79,7 @@
             justify-content: center;
             align-items: center;
             opacity: 0.6;
-            z-index: 7;
+            z-index: 13;
         }
 
         .eaten-fruit {
@@ -99,29 +98,30 @@
         .sick-face .mouth-path { d: path("M75 150 Q110 140 150 150 Q190 160 225 150"); fill: none; stroke: #333; stroke-width: 5; }
         .sick-face .teeth { display: none; }
 
-        /* Boca Aberta (Feedback visual) */
+        /* Boca Aberta */
         .mouth-open .mouth-path { d: path("M75 130 Q150 130 225 130 Q225 200 150 200 Q75 200 75 130 Z") !important; }
         .mouth-open .teeth { display: none; }
 
-        /* --- LIQUIDIFICADOR (MODO VITAMINA) --- */
+        /* --- LIQUIDIFICADOR --- */
         #blender-container {
             position: absolute;
             bottom: 20px;
             right: 20px;
             width: 140px;
             height: 200px;
-            z-index: 40; /* Alto para ficar acima das frutas quando arrastado */
+            z-index: 20; 
             display: none;
-            transition: transform 0.3s; /* Transição suave APENAS quando não está sendo arrastado */
+            transition: transform 0.3s;
             transform-origin: center bottom;
-            pointer-events: auto; /* Garante que recebe cliques */
+            pointer-events: auto;
+            touch-action: none;
         }
 
-        /* Classe para quando o liquidificador pode ser arrastado */
         .blender-ready {
             cursor: grab;
             animation: pulse-ready 1s infinite;
             filter: drop-shadow(0 0 10px gold);
+            z-index: 200 !important; /* Acima de tudo para entregar */
         }
         .blender-ready:active { cursor: grabbing; animation: none; }
 
@@ -139,10 +139,10 @@
         .poop-drop {
             position: absolute;
             font-size: 80px;
-            z-index: 1; /* Atrás do monstro inicialmente */
+            z-index: 5; /* Atrás do monstro */
             animation: dropPoop 2s forwards;
             left: 50%;
-            top: 55%; /* Começa na "saída" do monstro */
+            top: 55%;
         }
 
         @keyframes dropPoop {
@@ -209,10 +209,11 @@
 
         /* --- FRUTAS --- */
         .fruit {
-            width: 65px; height: 65px; position: absolute; cursor: grab; z-index: 30;
+            width: 70px; height: 70px; position: absolute; cursor: grab; z-index: 30;
             filter: drop-shadow(2px 4px 3px rgba(0,0,0,0.2)); transition: transform 0.1s;
+            touch-action: none;
         }
-        .fruit:active { cursor: grabbing; transform: scale(1.1); }
+        .fruit:active { cursor: grabbing; transform: scale(1.1); z-index: 1000 !important; }
 
         /* --- TELAS --- */
         #start-screen {
@@ -246,7 +247,7 @@
 
     <!-- TELA INICIAL -->
     <div id="start-screen">
-        <h1 style="color:white; font-size: 3rem; text-shadow: 2px 2px 0 #000;">Monstro Comilão</h1>
+        <h1 style="color:white; font-size: 3rem; text-shadow: 2px 2px 0 #000; text-align:center;">Monstro Comilão</h1>
         <button class="big-btn" onclick="startGame()">JOGAR</button>
         <p style="color:white; margin-top:20px;">Para a Lavine ❤️</p>
     </div>
@@ -376,7 +377,8 @@
             mouthSensor: document.getElementById('mouth-sensor'),
             poopBtn: document.getElementById('poop-btn'),
             gameContainer: document.getElementById('game-container'),
-            btnBlender: document.getElementById('btn-blender')
+            btnBlender: document.getElementById('btn-blender'),
+            uiLayer: document.getElementById('ui-layer')
         };
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -496,6 +498,7 @@
             if (state.needsPoop) return;
             state.mode = (state.mode === 'normal') ? 'blender' : 'normal';
             if (state.mode === 'blender') {
+                document.querySelectorAll('.fruit').forEach(el => el.remove()); 
                 els.blender.style.display = 'block';
                 document.body.classList.add('blender-active');
                 els.btnBlender.classList.add('btn-active');
@@ -515,10 +518,89 @@
             state.isPlaying = true;
             state.blenderReady = false;
             els.blender.classList.remove('blender-ready');
+            
             document.querySelectorAll('.fruit').forEach(el => el.remove());
+
             if (state.mode === 'normal') setupNormalRound();
             else setupBlenderRound();
             moveEyes();
+        }
+
+        // --- GERAÇÃO DE GRADE PARA EVITAR SOBREPOSIÇÃO (NOVO) ---
+        function generateGridPositions() {
+            const positions = [];
+            const fruitSize = 75; // Tamanho fruta + margem
+            const cols = Math.floor(window.innerWidth / fruitSize);
+            const rows = Math.floor(window.innerHeight / fruitSize);
+
+            // Zonas Proibidas (Rects: x, y, width, height)
+            // Monstro (Centro)
+            const monsterRect = { 
+                x: window.innerWidth / 2 - 170, 
+                y: window.innerHeight / 2 - 200, 
+                w: 340, 
+                h: 400 
+            };
+            
+            // Texto (Topo)
+            const textRect = { x: 0, y: 0, w: window.innerWidth, h: 120 };
+            
+            // Botão Poop (Esquerda Inferior)
+            const poopRect = { x: 0, y: window.innerHeight - 120, w: 120, h: 120 };
+
+            // Sidebar (Direita Meio)
+            const sideRect = { x: window.innerWidth - 80, y: window.innerHeight/2 - 100, w: 80, h: 200 };
+
+            // Liquidificador (Direita Inferior - se ativo)
+            const blenderRect = (state.mode === 'blender') 
+                ? { x: window.innerWidth - 200, y: window.innerHeight - 250, w: 200, h: 250 } 
+                : { x: 0, y: 0, w: 0, h: 0 };
+
+            // Gera slots na grade
+            for(let c = 0; c < cols; c++) {
+                for(let r = 0; r < rows; r++) {
+                    const x = c * fruitSize + 10; // offset
+                    const y = r * fruitSize + 10;
+
+                    // Checa colisões
+                    const inMonster = (x + fruitSize > monsterRect.x && x < monsterRect.x + monsterRect.w) &&
+                                      (y + fruitSize > monsterRect.y && y < monsterRect.y + monsterRect.h);
+                    
+                    const inText = (y < textRect.h);
+                    const inPoop = (x < poopRect.w && y > poopRect.y);
+                    const inSide = (x > sideRect.x && y > sideRect.y && y < sideRect.y + sideRect.h);
+                    const inBlender = (x > blenderRect.x && y > blenderRect.y);
+
+                    if (!inMonster && !inText && !inPoop && !inSide && !inBlender) {
+                        positions.push({x, y});
+                    }
+                }
+            }
+
+            // Embaralha as posições
+            return positions.sort(() => Math.random() - 0.5);
+        }
+
+        function spawnFruitsIntelligent(requiredFruits) {
+            let fruitsToSpawn = [...requiredFruits];
+            const allTypes = Object.keys(fruitsData);
+            
+            // Completa até 10-12 frutas
+            while(fruitsToSpawn.length < 12) {
+                const randomType = allTypes[Math.floor(Math.random() * allTypes.length)];
+                fruitsToSpawn.push(randomType);
+            }
+            fruitsToSpawn.sort(() => Math.random() - 0.5);
+
+            // Pega slots livres
+            const slots = generateGridPositions();
+            
+            // Cria frutas nos slots
+            fruitsToSpawn.forEach((type, index) => {
+                if (index < slots.length) {
+                    createFruit(type, slots[index]);
+                }
+            });
         }
 
         // --- MODO NORMAL ---
@@ -529,10 +611,15 @@
             state.eatenCount = 0;
             els.bellyCounter.innerText = '';
             els.eatenFruits.innerHTML = '';
+            
             const plural = state.targetCount > 1 ? 's' : '';
             els.instruction.innerHTML = `Quero <span class="highlight-num">${state.targetCount}</span> ${capitalize(state.targetType)}${plural}!`;
             speak(`Eu quero ${state.targetCount} ${state.targetType}${plural}`);
-            spawnFruits(10);
+            
+            let required = [];
+            for(let i=0; i<state.targetCount; i++) required.push(state.targetType);
+            
+            spawnFruitsIntelligent(required);
         }
 
         function eatFruitNormal(el) {
@@ -563,14 +650,21 @@
             while(type1 === type2) type2 = types[Math.floor(Math.random() * types.length)];
             const count1 = Math.floor(Math.random() * 2) + 1;
             const count2 = Math.floor(Math.random() * 2) + 1;
+            
             state.blenderRecipe = { [type1]: count1, [type2]: count2 };
             state.blenderContent = [];
             els.blenderLiquid.style.opacity = 0;
+            
             const txt1 = `${count1} ${capitalize(type1)}${count1>1?'s':''}`;
             const txt2 = `${count2} ${capitalize(type2)}${count2>1?'s':''}`;
             els.instruction.innerHTML = `Vitamina: <span class="highlight-num">${txt1}</span> e <span class="highlight-num">${txt2}</span>`;
             speak(`Vamos fazer vitamina de ${type1} com ${type2}.`);
-            spawnFruits(12);
+            
+            let required = [];
+            for(let i=0; i<count1; i++) required.push(type1);
+            for(let i=0; i<count2; i++) required.push(type2);
+            
+            spawnFruitsIntelligent(required);
         }
 
         function checkBlenderIngredient(el) {
@@ -617,21 +711,20 @@
             }, 1500);
         }
 
-        // --- DRAG DO LIQUIDIFICADOR (CORRIGIDO) ---
+        // --- DRAG DO LIQUIDIFICADOR ---
         function setupBlenderDrag() {
             let startX, startY;
             const el = els.blender;
 
             function onStart(e) {
                 if (!state.blenderReady) return; 
-                e.preventDefault();
+                e.preventDefault(); 
                 const touch = e.type === 'touchstart' ? e.touches[0] : e;
                 startX = touch.clientX;
                 startY = touch.clientY;
                 
-                // IMPORTANTE: Remove transição para o arrasto ser instantâneo
                 el.style.transition = 'none';
-                el.style.zIndex = 100;
+                el.style.zIndex = 1000; // Topo máximo
 
                 function onMove(me) {
                     const mt = me.type === 'touchmove' ? me.touches[0] : me;
@@ -639,7 +732,6 @@
                     const dy = mt.clientY - startY;
                     el.style.transform = `translate(${dx}px, ${dy}px)`;
                     
-                    // Checa proximidade para feedback visual
                     const bRect = el.getBoundingClientRect();
                     const bCx = bRect.left + bRect.width/2;
                     const bCy = bRect.top + bRect.height/2;
@@ -658,7 +750,6 @@
                     document.removeEventListener('touchmove', onMove);
                     document.removeEventListener('touchend', onEnd);
                     
-                    // Checa colisão
                     const bRect = el.getBoundingClientRect();
                     const bCx = bRect.left + bRect.width/2;
                     const bCy = bRect.top + bRect.height/2;
@@ -667,10 +758,10 @@
                     if (bCx >= mRect.left && bCx <= mRect.right && bCy >= mRect.top && bCy <= mRect.bottom) {
                         feedMonsterJuice();
                     } else {
-                        // Volta para o lugar com transição suave
                         el.style.transition = 'transform 0.3s';
                         el.style.transform = 'none';
                         els.monster.classList.remove('mouth-open');
+                        el.style.zIndex = 20; 
                     }
                 }
 
@@ -689,7 +780,6 @@
             els.blender.classList.remove('blender-ready');
             els.monster.classList.remove('mouth-open');
             
-            // Animação de virar na boca
             els.blender.style.transition = 'transform 0.5s';
             els.blender.style.transform = 'translate(-80px, -200px) rotate(-100deg)';
             
@@ -712,32 +802,20 @@
             state.blenderReady = false;
             els.blender.classList.remove('blender-ready');
             els.blenderLiquid.style.opacity = 0;
+            els.blender.style.zIndex = 20;
         }
 
-        // --- SISTEMA DE FRUTAS ---
-        function spawnFruits(qtd) {
-            for(let i=0; i<qtd; i++) {
-                let type;
-                const types = Object.keys(fruitsData);
-                if (Math.random() > 0.3) {
-                    if (state.mode === 'normal') type = state.targetType;
-                    else {
-                        const ingredients = Object.keys(state.blenderRecipe);
-                        type = ingredients[Math.floor(Math.random() * ingredients.length)];
-                    }
-                } else type = types[Math.floor(Math.random() * types.length)];
-                createFruit(type);
-            }
-        }
-
-        function createFruit(type) {
+        // --- CRIAÇÃO DE FRUTAS ---
+        function createFruit(type, pos) {
             const el = document.createElement('div');
             el.className = 'fruit';
             el.dataset.type = type;
             el.innerHTML = `<svg viewBox="0 0 70 70">${fruitsData[type].shape}</svg>`;
-            const x = Math.random() * (window.innerWidth - 80);
-            const y = Math.random() * (window.innerHeight - 150);
-            el.style.left = x + 'px'; el.style.top = y + 'px';
+            
+            // Usa o sistema de grade (Grid)
+            el.style.left = pos.x + 'px'; 
+            el.style.top = pos.y + 'px';
+            
             el.style.animation = 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
             setupFruitDrag(el);
             els.gameContainer.appendChild(el);
