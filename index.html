@@ -12,7 +12,7 @@
             overflow: hidden;
             background-color: #f0f8ff;
             font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
-            touch-action: none;
+            touch-action: none; /* Impede rolagem no Android */
             user-select: none;
             -webkit-user-select: none;
         }
@@ -27,7 +27,7 @@
         /* --- O MONSTRO --- */
         #monster-container {
             position: absolute;
-            top: 40%; /* Subi um pouco para dar espaço pra cesta */
+            top: 40%; 
             left: 50%;
             transform: translate(-50%, -50%);
             width: 300px;
@@ -39,7 +39,9 @@
 
         #mouth-sensor {
             position: absolute;
-            top: 130px; left: 75px; width: 150px; height: 80px; z-index: 15;
+            top: 130px; left: 75px; width: 150px; height: 100px; 
+            z-index: 15;
+            /* border: 1px solid red; /* Descomente para ver a área da boca */
         }
 
         /* --- BARRIGA (VISUAL) --- */
@@ -65,75 +67,106 @@
             position: relative !important; transform: none !important; left: auto !important; top: auto !important;
         }
 
-        /* Expressão de enjoo */
+        /* Expressões do Monstro */
         .sick-face #monster-body { fill: #a8d5ba !important; transition: fill 0.5s; }
         .sick-face .eye-pupil { transform: scale(0.5); }
         .sick-face .mouth-path { d: path("M75 150 Q110 140 150 150 Q190 160 225 150"); fill: none; stroke: #333; stroke-width: 5; }
         .sick-face .teeth { display: none; }
-        .mouth-open .mouth-path { d: path("M75 130 Q150 130 225 130 Q225 200 150 200 Q75 200 75 130 Z") !important; }
+        
+        /* Boca Aberta (Feedback) */
+        .mouth-open .mouth-path { d: path("M75 130 Q150 130 225 130 Q225 210 150 210 Q75 210 75 130 Z") !important; }
         .mouth-open .teeth { display: none; }
 
-        /* --- CESTA DE FRUTAS (NOVO) --- */
+        /* --- CESTA DE FRUTAS (VISUAL NOVO) --- */
         #fruit-basket {
             position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 120px; /* Altura da cesta */
-            background: #deb887; /* Cor de madeira clara */
-            border-top: 8px solid #8b4513; /* Borda de madeira escura */
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 500px;
+            height: 100px;
+            
+            /* Visual de Cesta de Vime */
+            background: repeating-linear-gradient(45deg, #d2691e 0, #d2691e 10px, #8b4513 10px, #8b4513 20px);
+            border-radius: 10px 10px 50px 50px;
+            border: 5px solid #8b4513;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3) inset;
+            
             display: flex;
             justify-content: space-around;
             align-items: center;
             z-index: 50;
-            box-shadow: 0 -5px 15px rgba(0,0,0,0.2);
-            padding-bottom: 10px; /* Espaço seguro para iOS/Android */
+            padding: 0 10px;
+        }
+        /* Borda superior da cesta para dar profundidade */
+        #fruit-basket::before {
+            content: '';
+            position: absolute;
+            top: -15px;
+            left: -5px;
+            right: -5px;
+            height: 20px;
+            border-radius: 10px;
+            background: #a0522d;
+            border: 2px solid #5c3317;
+            z-index: -1;
         }
 
-        /* Item dentro da cesta (Estático) */
         .basket-item {
-            width: 70px;
-            height: 70px;
+            width: 65px;
+            height: 65px;
             position: relative;
             cursor: grab;
             transition: transform 0.1s;
+            margin-top: -30px; /* Faz a fruta "sair" um pouco da cesta */
+            filter: drop-shadow(2px 5px 5px rgba(0,0,0,0.4));
         }
         .basket-item:active { transform: scale(0.9); }
 
-        /* Fruta sendo arrastada (Dinâmica) */
+        /* Fruta sendo arrastada */
         .fruit-drag {
             width: 80px; height: 80px;
             position: absolute;
             z-index: 1000;
-            pointer-events: none; /* Deixa o evento passar para o touch move global */
+            pointer-events: none; 
             filter: drop-shadow(5px 10px 10px rgba(0,0,0,0.3));
         }
 
         /* --- LIQUIDIFICADOR --- */
-        #blender-container {
+        #blender-wrapper {
             position: absolute;
-            bottom: 140px; /* Acima da cesta */
-            right: 20px;
-            width: 130px;
-            height: 180px;
-            z-index: 20; 
+            bottom: 150px; /* Posição segura acima da cesta */
+            right: 10px;
+            width: 140px;
+            height: 200px;
+            z-index: 60;
             display: none;
-            transition: transform 0.3s;
+            touch-action: none; /* CRÍTICO PARA ANDROID */
+        }
+        
+        #blender-container {
+            width: 100%;
+            height: 100%;
             transform-origin: center bottom;
-            pointer-events: auto;
-            touch-action: none;
+            transition: transform 0.1s linear; /* Movimento rápido */
         }
 
         .blender-ready {
             cursor: grab;
             animation: pulse-ready 1s infinite;
-            filter: drop-shadow(0 0 10px gold);
+            filter: drop-shadow(0 0 15px gold);
+        }
+        /* Classe usada durante a animação de beber */
+        .blender-drinking-anim {
+            transition: transform 0.5s ease-in-out !important;
+            transform: translate(-150px, -150px) rotate(-110deg) !important; /* Vai até a boca e vira */
             z-index: 200 !important;
         }
-        .blender-ready:active { cursor: grabbing; animation: none; }
 
-        #blender-sensor { position: absolute; top: 0; left: 10; width: 120px; height: 150px; z-index: 10; }
-        .blender-active #monster-container { left: 25%; }
+        #blender-sensor { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 61; }
+        
+        .blender-active #monster-container { left: 30%; } /* Afasta monstro */
         .blender-shaking { animation: shake 0.5s infinite; }
         
         /* --- ANIMAÇÃO DO COCÔ --- */
@@ -149,8 +182,8 @@
 
         /* --- CONTROLES LATERAIS --- */
         #controls-sidebar {
-            position: absolute; right: 10px; top: 40%;
-            transform: translateY(-50%); display: flex; flex-direction: column; gap: 15px; z-index: 50;
+            position: absolute; right: 10px; top: 30%;
+            display: flex; flex-direction: column; gap: 15px; z-index: 50;
         }
         .control-btn {
             width: 60px; height: 60px; background: white; border-radius: 50%;
@@ -164,7 +197,7 @@
 
         /* Botão de Cocô */
         #poop-btn {
-            position: absolute; bottom: 140px; left: 20px; /* Acima da cesta */
+            position: absolute; bottom: 140px; left: 20px; 
             width: 80px; height: 80px; background: #fff; border-radius: 50%;
             border: 4px solid #e74c3c; display: none; justify-content: center; align-items: center;
             z-index: 60; animation: pulse 1s infinite; cursor: pointer;
@@ -194,12 +227,13 @@
 
         /* --- MEDIA QUERIES --- */
         @media (max-width: 768px) {
-            #monster-container { width: 250px; height: 300px; }
+            #monster-container { width: 250px; height: 300px; top: 45%; }
             #mouth-sensor { top: 110px; left: 60px; width: 130px; }
             #belly-container { top: 180px; left: 75px; width: 100px; }
             #instruction-bubble { font-size: 1.1rem; }
-            #fruit-basket { height: 100px; }
-            .basket-item { width: 60px; height: 60px; }
+            .basket-item { width: 55px; height: 55px; }
+            #blender-wrapper { bottom: 130px; right: 5px; transform: scale(0.8); } /* Liquidificador menor no celular */
+            .blender-active #monster-container { left: 10%; } /* Monstro bem na esquerda no celular */
         }
 
         @keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-1deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 100% { transform: translate(1px, -2px) rotate(-1deg); } }
@@ -230,18 +264,16 @@
         </div>
     </div>
 
-    <!-- BOTÃO DE COCÔ (ESCONDIDO) -->
+    <!-- BOTÃO DE COCÔ -->
     <div id="poop-btn" onclick="doPoop()">
         <span style="font-size: 40px;">💩</span>
     </div>
 
     <div id="game-container">
-        <!-- TEXTO DE INSTRUÇÃO -->
         <div id="ui-layer">
             <div id="instruction-bubble">Clique em JOGAR!</div>
         </div>
 
-        <!-- O MONSTRO -->
         <div id="monster-container">
             <div id="mouth-sensor"></div>
             <div id="belly-container">
@@ -266,22 +298,23 @@
             </svg>
         </div>
 
-        <!-- LIQUIDIFICADOR -->
-        <div id="blender-container">
-            <div id="blender-sensor"></div>
-            <svg viewBox="0 0 140 200">
-                <path d="M20 40 L30 160 Q35 180 70 180 Q105 180 110 160 L120 40 Z" fill="rgba(200, 230, 255, 0.6)" stroke="#3498db" stroke-width="3"/>
-                <rect x="15" y="30" width="110" height="15" rx="5" fill="#333"/>
-                <rect x="25" y="180" width="90" height="20" fill="#e74c3c"/>
-                <path id="blender-liquid" d="M25 160 Q35 175 70 175 Q105 175 115 160 L118 100 Q70 110 22 100 Z" fill="#e67e22" opacity="0" style="transition: opacity 1s ease;"/>
-            </svg>
+        <!-- WRAPPER DO LIQUIDIFICADOR PARA FACILITAR DRAG -->
+        <div id="blender-wrapper">
+            <div id="blender-sensor"></div> <!-- Área de toque aumentada -->
+            <div id="blender-container">
+                <svg viewBox="0 0 140 200">
+                    <path d="M20 40 L30 160 Q35 180 70 180 Q105 180 110 160 L120 40 Z" fill="rgba(200, 230, 255, 0.6)" stroke="#3498db" stroke-width="3"/>
+                    <rect x="15" y="30" width="110" height="15" rx="5" fill="#333"/>
+                    <rect x="25" y="180" width="90" height="20" fill="#e74c3c"/>
+                    <path id="blender-liquid" d="M25 160 Q35 175 70 175 Q105 175 115 160 L118 100 Q70 110 22 100 Z" fill="#e67e22" opacity="0" style="transition: opacity 1s ease;"/>
+                </svg>
+            </div>
         </div>
 
         <!-- CESTA DE FRUTAS -->
         <div id="fruit-basket">
-            <!-- As frutas serão injetadas aqui pelo JS -->
+            <!-- As frutas serão injetadas aqui -->
         </div>
-
     </div>
 
     <!-- SCRIPT DO JOGO -->
@@ -299,11 +332,8 @@
         };
 
         const monsterColors = [
-            { fill: '#7bed9f', stroke: '#2ecc71' }, 
-            { fill: '#ff7675', stroke: '#d63031' },
-            { fill: '#74b9ff', stroke: '#0984e3' }, 
-            { fill: '#a29bfe', stroke: '#6c5ce7' }, 
-            { fill: '#ffeaa7', stroke: '#fdcb6e' } 
+            { fill: '#7bed9f', stroke: '#2ecc71' }, { fill: '#ff7675', stroke: '#d63031' },
+            { fill: '#74b9ff', stroke: '#0984e3' }, { fill: '#a29bfe', stroke: '#6c5ce7' }, { fill: '#ffeaa7', stroke: '#fdcb6e' } 
         ];
         let colorIndex = 0;
 
@@ -311,8 +341,7 @@
             mode: 'normal',
             targetCount: 0, eatenCount: 0, targetType: '',
             blenderRecipe: {}, blenderContent: [], blenderReady: false, 
-            poopMeter: 0, isPlaying: false, needsPoop: false,
-            activeDrag: null // Armazena a fruta que está sendo arrastada
+            poopMeter: 0, isPlaying: false, needsPoop: false, activeDrag: null
         };
 
         const MAX_POOP = 6;
@@ -320,13 +349,12 @@
             instruction: document.getElementById('instruction-bubble'),
             monster: document.getElementById('monster-container'),
             monsterBody: document.getElementById('monster-body'),
-            monsterArmsLeft: document.getElementById('monster-arms-left'),
-            monsterArmsRight: document.getElementById('monster-arms-right'),
             bellyCounter: document.getElementById('belly-counter'),
             eatenFruits: document.getElementById('eaten-fruits-visuals'),
-            blender: document.getElementById('blender-container'),
-            blenderSensor: document.getElementById('blender-sensor'),
+            blenderWrapper: document.getElementById('blender-wrapper'),
+            blenderContainer: document.getElementById('blender-container'),
             blenderLiquid: document.getElementById('blender-liquid'),
+            blenderSensor: document.getElementById('blender-sensor'),
             mouthSensor: document.getElementById('mouth-sensor'),
             poopBtn: document.getElementById('poop-btn'),
             gameContainer: document.getElementById('game-container'),
@@ -336,6 +364,7 @@
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
+        // --- SISTEMA DE FALA E SOM ---
         function speak(text) {
             window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
@@ -380,17 +409,7 @@
             }
         }
 
-        function toggleColor() {
-            if (state.needsPoop) { speak("Agora não, estou passando mal!"); return; }
-            colorIndex = (colorIndex + 1) % monsterColors.length;
-            const theme = monsterColors[colorIndex];
-            els.monsterBody.setAttribute('fill', theme.fill);
-            els.monsterBody.setAttribute('stroke', theme.stroke);
-            els.monsterArmsLeft.setAttribute('stroke', theme.stroke);
-            els.monsterArmsRight.setAttribute('stroke', theme.stroke);
-            playSound('pop');
-        }
-
+        // --- LÓGICA DO JOGO ---
         function startGame() {
             document.getElementById('start-screen').style.display = 'none';
             if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -398,14 +417,23 @@
             startRound();
         }
 
+        function toggleColor() {
+            if (state.needsPoop) return;
+            colorIndex = (colorIndex + 1) % monsterColors.length;
+            const theme = monsterColors[colorIndex];
+            els.monsterBody.setAttribute('fill', theme.fill);
+            els.monsterBody.setAttribute('stroke', theme.stroke);
+            playSound('pop');
+        }
+
         function checkPoopStatus() {
             if (state.poopMeter >= MAX_POOP) {
                 state.needsPoop = true;
                 els.monster.classList.add('sick-face');
-                els.instruction.innerHTML = "Ai minha barriga! Preciso fazer cocô!";
+                els.instruction.innerHTML = "Ai minha barriga!";
                 speak("Ai ai ai, minha barriga! Preciso fazer cocô!");
                 els.poopBtn.style.display = 'flex';
-                els.basket.style.opacity = '0.5'; // Desabilita cesta visualmente
+                els.basket.style.opacity = '0.5';
                 els.basket.style.pointerEvents = 'none';
                 return true;
             }
@@ -428,10 +456,9 @@
             els.monster.classList.remove('sick-face');
             els.basket.style.opacity = '1';
             els.basket.style.pointerEvents = 'auto';
-            
             const theme = monsterColors[colorIndex];
             els.monsterBody.setAttribute('fill', theme.fill);
-            speak("Ufa! Que alívio! Agora estou com fome de novo.");
+            speak("Ufa! Alívio!");
             els.bellyCounter.innerText = '';
             els.eatenFruits.innerHTML = '';
             setTimeout(startRound, 3000);
@@ -441,13 +468,13 @@
             if (state.needsPoop) return;
             state.mode = (state.mode === 'normal') ? 'blender' : 'normal';
             if (state.mode === 'blender') {
-                els.blender.style.display = 'block';
+                els.blenderWrapper.style.display = 'block';
                 document.body.classList.add('blender-active');
                 els.btnBlender.classList.add('btn-active');
                 els.bellyCounter.innerText = '';
                 els.eatenFruits.innerHTML = '';
             } else {
-                els.blender.style.display = 'none';
+                els.blenderWrapper.style.display = 'none';
                 document.body.classList.remove('blender-active');
                 els.btnBlender.classList.remove('btn-active');
                 resetBlender();
@@ -459,9 +486,7 @@
             if (checkPoopStatus()) return;
             state.isPlaying = true;
             state.blenderReady = false;
-            els.blender.classList.remove('blender-ready');
-            
-            // Limpa cesta
+            els.blenderContainer.classList.remove('blender-ready');
             els.basket.innerHTML = '';
 
             if (state.mode === 'normal') setupNormalRound();
@@ -469,77 +494,55 @@
             moveEyes();
         }
 
-        // --- PREENCHIMENTO DA CESTA ---
         function fillBasket(requiredTypes) {
-            // Garante que o que precisa está na cesta + algumas outras aleatórias
             let options = [...requiredTypes];
             const allTypes = Object.keys(fruitsData);
-            
-            // Adiciona frutas aleatórias para completar 4 ou 5 opções na cesta
             while(options.length < 5) {
                 const randomType = allTypes[Math.floor(Math.random() * allTypes.length)];
                 if(!options.includes(randomType)) options.push(randomType);
             }
-            
-            // Embaralha ordem
             options.sort(() => Math.random() - 0.5);
-
-            // Cria elementos na cesta
             options.forEach(type => {
                 const item = document.createElement('div');
                 item.className = 'basket-item';
                 item.innerHTML = `<svg viewBox="0 0 70 70" style="pointer-events:none;">${fruitsData[type].shape}</svg>`;
                 item.dataset.type = type;
-                
-                // Evento para clonar e arrastar
                 item.addEventListener('touchstart', handleBasketTouchStart, {passive: false});
                 item.addEventListener('mousedown', handleBasketTouchStart);
-                
                 els.basket.appendChild(item);
             });
         }
 
-        // --- SISTEMA DE CLONAGEM E ARRASTO (INFINITO) ---
+        // --- DRAG FRUTAS (INFINITO) ---
         function handleBasketTouchStart(e) {
             if (!state.isPlaying || state.needsPoop) return;
             e.preventDefault();
-
             const type = e.currentTarget.dataset.type;
             const touch = e.type === 'touchstart' ? e.touches[0] : e;
 
-            // Cria o clone que será arrastado
             const dragEl = document.createElement('div');
             dragEl.className = 'fruit-drag';
             dragEl.dataset.type = type;
             dragEl.innerHTML = `<svg viewBox="0 0 70 70">${fruitsData[type].shape}</svg>`;
             
-            // Posiciona exatamente onde o dedo está
-            dragEl.style.left = (touch.clientX - 40) + 'px'; // Centraliza (80px/2)
+            dragEl.style.left = (touch.clientX - 40) + 'px';
             dragEl.style.top = (touch.clientY - 40) + 'px';
-            
             els.gameContainer.appendChild(dragEl);
             state.activeDrag = dragEl;
 
-            // Inicia listeners globais de movimento
             const moveHandler = (me) => {
                 if(!state.activeDrag) return;
                 const mt = me.type === 'touchmove' ? me.touches[0] : me;
                 state.activeDrag.style.left = (mt.clientX - 40) + 'px';
                 state.activeDrag.style.top = (mt.clientY - 40) + 'px';
             };
-
-            const endHandler = (me) => {
+            const endHandler = () => {
                 document.removeEventListener('mousemove', moveHandler);
                 document.removeEventListener('mouseup', endHandler);
                 document.removeEventListener('touchmove', moveHandler);
                 document.removeEventListener('touchend', endHandler);
-                
-                if (state.activeDrag) {
-                    checkDrop(state.activeDrag);
-                    state.activeDrag = null;
-                }
+                if (state.activeDrag) { checkDrop(state.activeDrag); state.activeDrag = null; }
             };
-
             document.addEventListener('mousemove', moveHandler);
             document.addEventListener('mouseup', endHandler);
             document.addEventListener('touchmove', moveHandler, {passive: false});
@@ -550,37 +553,29 @@
             const rect = el.getBoundingClientRect();
             const cx = rect.left + rect.width/2;
             const cy = rect.top + rect.height/2;
-
             let dropped = false;
 
             if (state.mode === 'normal') {
                 const mouth = els.mouthSensor.getBoundingClientRect();
                 if (cx >= mouth.left && cx <= mouth.right && cy >= mouth.top && cy <= mouth.bottom) {
-                    if (el.dataset.type === state.targetType) {
-                        eatFruitNormal(el);
-                        dropped = true;
-                    } else {
-                        speak("Essa não!"); playSound('pop');
-                    }
+                    if (el.dataset.type === state.targetType) { eatFruitNormal(el); dropped = true; }
+                    else { speak("Essa não!"); playSound('pop'); }
                 }
             } else {
-                const blender = els.blenderSensor.getBoundingClientRect();
-                if (cx >= blender.left && cx <= blender.right && cy >= blender.top && cy <= blender.bottom) {
-                    checkBlenderIngredient(el);
-                    dropped = true;
+                // Sensor do Liquidificador (wrapper ou sensor interno)
+                const blenderRect = els.blenderSensor.getBoundingClientRect();
+                if (cx >= blenderRect.left && cx <= blenderRect.right && cy >= blenderRect.top && cy <= blenderRect.bottom) {
+                    checkBlenderIngredient(el); dropped = true;
                 }
             }
 
-            // Se não foi solta no lugar certo, ela some (puff)
             if (!dropped) {
-                el.style.transition = 'transform 0.2s, opacity 0.2s';
-                el.style.transform = 'scale(0)';
-                el.style.opacity = '0';
+                el.style.transition = '0.2s'; el.style.transform = 'scale(0)';
                 setTimeout(() => el.remove(), 200);
             }
         }
 
-        // --- MODO NORMAL ---
+        // --- MODOS ---
         function setupNormalRound() {
             const types = Object.keys(fruitsData);
             state.targetType = types[Math.floor(Math.random() * types.length)];
@@ -588,124 +583,112 @@
             state.eatenCount = 0;
             els.bellyCounter.innerText = '';
             els.eatenFruits.innerHTML = '';
-            
             const plural = state.targetCount > 1 ? 's' : '';
             els.instruction.innerHTML = `Quero <span class="highlight-num">${state.targetCount}</span> ${capitalize(state.targetType)}${plural}!`;
-            speak(`Eu quero ${state.targetCount} ${state.targetType}${plural}`);
-            
+            speak(`Quero ${state.targetCount} ${state.targetType}${plural}`);
             fillBasket([state.targetType]);
         }
 
         function eatFruitNormal(el) {
-            // Cria um clone visual pequeno para a barriga antes de remover o drag
             const bellyClone = el.cloneNode(true);
             bellyClone.className = 'eaten-fruit';
-            bellyClone.style.left = 'auto'; bellyClone.style.top = 'auto'; // Remove posição fixa
+            bellyClone.style.left = 'auto'; bellyClone.style.top = 'auto';
             els.eatenFruits.appendChild(bellyClone);
-            
-            el.remove(); // Remove a fruta arrastada grandona
-            
+            el.remove();
             playSound('eat');
-            state.targetCount--;
-            state.eatenCount++;
+            state.targetCount--; state.eatenCount++;
             els.bellyCounter.innerText = state.eatenCount;
             els.bellyCounter.classList.remove('number-pop');
             void els.bellyCounter.offsetWidth;
             els.bellyCounter.classList.add('number-pop');
             speak(state.targetCount > 0 ? state.eatenCount.toString() : "Delícia!");
             if (state.targetCount <= 0) {
-                state.poopMeter++;
-                state.isPlaying = false;
-                setTimeout(startRound, 2000);
+                state.poopMeter++; state.isPlaying = false; setTimeout(startRound, 2000);
             }
         }
 
-        // --- MODO VITAMINA ---
         function setupBlenderRound() {
             const types = Object.keys(fruitsData);
-            const type1 = types[Math.floor(Math.random() * types.length)];
-            let type2 = types[Math.floor(Math.random() * types.length)];
-            while(type1 === type2) type2 = types[Math.floor(Math.random() * types.length)];
-            const count1 = Math.floor(Math.random() * 2) + 1;
-            const count2 = Math.floor(Math.random() * 2) + 1;
-            
-            state.blenderRecipe = { [type1]: count1, [type2]: count2 };
+            const t1 = types[Math.floor(Math.random()*types.length)];
+            let t2 = types[Math.floor(Math.random()*types.length)];
+            while(t1===t2) t2 = types[Math.floor(Math.random()*types.length)];
+            const c1 = Math.floor(Math.random()*2)+1;
+            const c2 = Math.floor(Math.random()*2)+1;
+            state.blenderRecipe = { [t1]: c1, [t2]: c2 };
             state.blenderContent = [];
             els.blenderLiquid.style.opacity = 0;
-            
-            const txt1 = `${count1} ${capitalize(type1)}${count1>1?'s':''}`;
-            const txt2 = `${count2} ${capitalize(type2)}${count2>1?'s':''}`;
-            els.instruction.innerHTML = `Vitamina: <span class="highlight-num">${txt1}</span> e <span class="highlight-num">${txt2}</span>`;
-            speak(`Vamos fazer vitamina de ${type1} com ${type2}.`);
-            
-            fillBasket([type1, type2]);
+            const tx1 = `${c1} ${capitalize(t1)}${c1>1?'s':''}`;
+            const tx2 = `${c2} ${capitalize(t2)}${c2>1?'s':''}`;
+            els.instruction.innerHTML = `Vitamina: <span class="highlight-num">${tx1}</span> e <span class="highlight-num">${tx2}</span>`;
+            speak(`Vitamina de ${t1} com ${t2}.`);
+            fillBasket([t1, t2]);
         }
 
         function checkBlenderIngredient(el) {
-            if (state.blenderReady) return; 
+            if (state.blenderReady) return;
             const type = el.dataset.type;
             const needed = state.blenderRecipe[type];
             if (needed > 0) {
                 state.blenderRecipe[type]--;
                 state.blenderContent.push(type);
-                el.remove();
-                playSound('pop');
-                const totalRestante = Object.values(state.blenderRecipe).reduce((a,b)=>a+b, 0);
-                if (totalRestante === 0) {
-                    finishBlender();
-                } else {
-                    updateBlenderText();
-                }
+                el.remove(); playSound('pop');
+                const rest = Object.values(state.blenderRecipe).reduce((a,b)=>a+b, 0);
+                if (rest === 0) finishBlender();
+                else updateBlenderText();
             } else {
-                speak("Essa não!");
-                playSound('pop');
-                el.remove();
+                speak("Essa não!"); playSound('pop'); el.remove();
             }
         }
 
         function updateBlenderText() {
             const parts = [];
-            for (let [type, count] of Object.entries(state.blenderRecipe)) {
-                if (count > 0) parts.push(`${count} ${type}`);
-            }
+            for (let [t, c] of Object.entries(state.blenderRecipe)) if (c > 0) parts.push(`${c} ${t}`);
             if(parts.length > 0) speak("Falta " + parts.join(" e "));
         }
 
         function finishBlender() {
             els.instruction.innerHTML = "Misturando...";
             playSound('blender');
-            els.blender.classList.add('blender-shaking');
+            els.blenderContainer.classList.add('blender-shaking');
             setTimeout(() => {
-                els.blender.classList.remove('blender-shaking');
+                els.blenderContainer.classList.remove('blender-shaking');
                 els.blenderLiquid.style.opacity = 1; 
                 state.blenderReady = true;
-                els.blender.classList.add('blender-ready');
-                els.instruction.innerHTML = "Agora dê para o monstro!";
-                speak("Pronto! Agora arraste o liquidificador até a minha boca!");
-                els.basket.innerHTML = ''; // Limpa cesta
+                els.blenderContainer.classList.add('blender-ready');
+                els.instruction.innerHTML = "Pronto! Dê para o monstro!";
+                speak("Pronto! Dá pra mim!");
+                els.basket.innerHTML = ''; 
             }, 1500);
         }
 
-        // --- DRAG DO LIQUIDIFICADOR ---
+        // --- DRAG DO LIQUIDIFICADOR (CORRIGIDO) ---
         function setupBlenderDrag() {
-            let startX, startY;
-            const el = els.blender;
+            let startX, startY, initialX, initialY;
+            const wrapper = els.blenderWrapper; // O que move
+            const container = els.blenderContainer; // O visual
 
             function onStart(e) {
-                if (!state.blenderReady) return; 
+                if (!state.blenderReady) return;
                 e.preventDefault(); 
                 const touch = e.type === 'touchstart' ? e.touches[0] : e;
                 startX = touch.clientX; startY = touch.clientY;
-                el.style.transition = 'none';
-                el.style.zIndex = 1000;
+                
+                // Pega posição atual
+                const rect = wrapper.getBoundingClientRect();
+                initialX = rect.left;
+                initialY = rect.top;
+
+                wrapper.style.zIndex = 1000;
 
                 function onMove(me) {
                     const mt = me.type === 'touchmove' ? me.touches[0] : me;
                     const dx = mt.clientX - startX;
                     const dy = mt.clientY - startY;
-                    el.style.transform = `translate(${dx}px, ${dy}px)`;
                     
-                    const bRect = el.getBoundingClientRect();
+                    wrapper.style.transform = `translate(${dx}px, ${dy}px)`;
+
+                    // Checa boca
+                    const bRect = wrapper.getBoundingClientRect();
                     const bCx = bRect.left + bRect.width/2;
                     const bCy = bRect.top + bRect.height/2;
                     const mRect = els.mouthSensor.getBoundingClientRect();
@@ -723,7 +706,7 @@
                     document.removeEventListener('touchmove', onMove);
                     document.removeEventListener('touchend', onEnd);
                     
-                    const bRect = el.getBoundingClientRect();
+                    const bRect = wrapper.getBoundingClientRect();
                     const bCx = bRect.left + bRect.width/2;
                     const bCy = bRect.top + bRect.height/2;
                     const mRect = els.mouthSensor.getBoundingClientRect();
@@ -731,10 +714,12 @@
                     if (bCx >= mRect.left && bCx <= mRect.right && bCy >= mRect.top && bCy <= mRect.bottom) {
                         feedMonsterJuice();
                     } else {
-                        el.style.transition = 'transform 0.3s';
-                        el.style.transform = 'none';
+                        // Volta
+                        wrapper.style.transition = 'transform 0.3s';
+                        wrapper.style.transform = 'none';
+                        setTimeout(() => wrapper.style.transition = '', 300);
                         els.monster.classList.remove('mouth-open');
-                        el.style.zIndex = 20; 
+                        wrapper.style.zIndex = 60;
                     }
                 }
 
@@ -744,24 +729,35 @@
                 document.addEventListener('touchend', onEnd);
             }
 
-            el.addEventListener('mousedown', onStart);
-            el.addEventListener('touchstart', onStart, {passive: false});
+            // Adiciona listeners ao SENSOR (área maior)
+            els.blenderSensor.addEventListener('mousedown', onStart);
+            els.blenderSensor.addEventListener('touchstart', onStart, {passive: false});
         }
 
         function feedMonsterJuice() {
             state.blenderReady = false;
-            els.blender.classList.remove('blender-ready');
+            els.blenderContainer.classList.remove('blender-ready');
             els.monster.classList.remove('mouth-open');
-            els.blender.style.transition = 'transform 0.5s';
-            els.blender.style.transform = 'translate(-80px, -200px) rotate(-100deg)';
+            
+            // Trava o wrapper na posição atual para animação visual correta
+            // Mas vamos animar o container interno
+            els.blenderContainer.classList.add('blender-drinking-anim');
             
             setTimeout(() => {
+                // Esvazia
                 els.blenderLiquid.style.opacity = 0;
                 playSound('glub');
+                
                 setTimeout(() => {
                     playSound('eat'); 
-                    speak("Hummm que delícia de suco!");
-                    resetBlender();
+                    speak("Hummm delícia!");
+                    
+                    // Reset total
+                    els.blenderContainer.classList.remove('blender-drinking-anim');
+                    els.blenderWrapper.style.transition = 'transform 0.3s';
+                    els.blenderWrapper.style.transform = 'none';
+                    setTimeout(() => els.blenderWrapper.style.transition = '', 300);
+                    
                     state.poopMeter += 2;
                     startRound();
                 }, 1500);
@@ -769,12 +765,10 @@
         }
 
         function resetBlender() {
-            els.blender.style.transform = 'none';
-            els.blender.style.transition = 'transform 0.3s';
-            state.blenderReady = false;
-            els.blender.classList.remove('blender-ready');
+            els.blenderWrapper.style.transform = 'none';
+            els.blenderContainer.classList.remove('blender-ready');
+            els.blenderContainer.classList.remove('blender-drinking-anim');
             els.blenderLiquid.style.opacity = 0;
-            els.blender.style.zIndex = 20;
         }
 
         function moveEyes() {
