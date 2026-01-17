@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>O Monstro Comilão</title>
+    <title>O Monstro Comilão - Para Lavine</title>
     <style>
         /* --- ESTILOS GERAIS --- */
         body {
             margin: 0;
             padding: 0;
             overflow: hidden;
-            background-color: #f0f8ff; /* Azul clarinho agradável */
-            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif; /* Fonte infantil */
-            touch-action: none; /* Impede rolagem da tela no celular */
+            background-color: #f0f8ff;
+            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+            touch-action: none;
             user-select: none;
             -webkit-user-select: none;
         }
@@ -21,10 +21,7 @@
             position: relative;
             width: 100vw;
             height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
+            overflow: hidden;
         }
 
         /* --- O MONSTRO --- */
@@ -35,214 +32,229 @@
             transform: translate(-50%, -50%);
             width: 300px;
             height: 350px;
-            z-index: 1;
-            pointer-events: none; /* Deixa o toque passar para as frutas se precisarem passar por cima */
+            z-index: 5;
+            transition: transform 0.5s ease;
+            pointer-events: none; /* Permite arrastar frutas por cima */
         }
 
-        /* Área da boca para detecção de colisão */
+        /* Área da boca para detecção */
         #mouth-sensor {
             position: absolute;
             top: 80px;
             left: 75px;
             width: 150px;
             height: 80px;
-            /* border: 2px solid red;  Descomente para ver a área de colisão */
-            z-index: 5;
+            z-index: 10;
         }
 
-        /* Barriga onde as frutas ficam */
-        #belly-container {
+        /* Expressão de enjoo (Hora do cocô) */
+        .sick-face #monster-body { fill: #a8d5ba !important; } /* Pele meio verde */
+        .sick-face .eye-pupil { transform: scale(0.5); }
+        .sick-face .mouth-path { d: path("M75 150 Q110 140 150 150 Q190 160 225 150"); fill: none; stroke: #333; stroke-width: 5; }
+        .sick-face .teeth { display: none; }
+
+        /* --- LIQUIDIFICADOR (MODO VITAMINA) --- */
+        #blender-container {
             position: absolute;
-            bottom: 30px;
-            left: 75px;
-            width: 150px;
-            height: 100px;
+            bottom: 20px;
+            right: 20px;
+            width: 140px;
+            height: 200px;
+            z-index: 4;
+            display: none; /* Oculto por padrão */
+            transition: transform 0.3s;
+        }
+
+        #blender-sensor {
+            position: absolute;
+            top: 0;
+            left: 10;
+            width: 120px;
+            height: 150px;
+            z-index: 10;
+        }
+
+        .blender-active #monster-container {
+            left: 30%; /* Move monstro para esquerda no modo vitamina */
+        }
+        
+        .blender-shaking {
+            animation: shake 0.5s infinite;
+        }
+
+        /* --- CONTROLES LATERAIS --- */
+        #controls-sidebar {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 50;
+        }
+
+        .control-btn {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 50%;
+            border: 4px solid #3498db;
+            cursor: pointer;
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 2;
-            opacity: 0.9;
-            pointer-events: none;
-        }
-
-        /* O Número Gigante na Barriga */
-        #belly-counter {
-            font-size: 4rem;
-            font-weight: bold;
-            color: #fff;
-            text-shadow: 2px 2px 0 #000;
-            z-index: 10;
-            position: absolute;
-        }
-
-        /* Container para as frutinhas comidas ficarem atrás do número */
-        #eaten-fruits-visuals {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            align-items: center;
-            opacity: 0.5; /* Um pouco mais transparentes para destacar o número */
-        }
-
-        .eaten-fruit {
-            width: 30px !important;
-            height: 30px !important;
-            position: relative !important;
-            transform: none !important;
-            margin: 2px;
-            transition: all 0.5s ease;
-        }
-
-        /* --- FRUTAS --- */
-        .fruit {
-            width: 70px;
-            height: 70px;
-            position: absolute;
-            cursor: grab;
-            z-index: 10;
-            filter: drop-shadow(3px 3px 2px rgba(0,0,0,0.2));
+            box-shadow: 0 4px 0 #2980b9;
             transition: transform 0.1s;
         }
+        .control-btn:active { transform: translateY(4px); box-shadow: none; }
+        .control-btn svg { width: 35px; height: 35px; fill: #333; }
+        .btn-active { background: #ffeaa7; border-color: #f1c40f; box-shadow: 0 4px 0 #d35400; }
 
-        .fruit:active {
-            cursor: grabbing;
-            transform: scale(1.1);
+        /* Botão de Cocô (Aparece só quando precisa) */
+        #poop-btn {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 80px;
+            height: 80px;
+            background: #fff;
+            border-radius: 50%;
+            border: 4px solid #e74c3c;
+            display: none; /* Escondido */
+            justify-content: center;
+            align-items: center;
+            z-index: 60;
+            animation: pulse 1s infinite;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
 
-        /* --- UI (TEXTOS E BOTÕES) --- */
+        /* --- UI E TEXTOS --- */
         #ui-layer {
             position: absolute;
-            top: 20px;
+            top: 10px;
             width: 100%;
             text-align: center;
             z-index: 20;
             pointer-events: none;
         }
 
-        #instruction-text {
-            font-size: 2rem;
-            color: #333;
-            background: rgba(255, 255, 255, 0.8);
-            padding: 10px 20px;
-            border-radius: 20px;
+        #instruction-bubble {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 30px;
             display: inline-block;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: 3px solid #333;
+            font-size: 1.5rem;
+            box-shadow: 5px 5px 0 rgba(0,0,0,0.1);
+            max-width: 80%;
         }
 
-        #target-number {
-            font-weight: bold;
-            color: #e74c3c;
-            font-size: 3rem;
-        }
+        .highlight-num { color: #e74c3c; font-weight: bold; font-size: 1.8rem; }
 
+        /* --- FRUTAS --- */
+        .fruit {
+            width: 65px;
+            height: 65px;
+            position: absolute;
+            cursor: grab;
+            z-index: 30;
+            filter: drop-shadow(2px 4px 3px rgba(0,0,0,0.2));
+            transition: transform 0.1s;
+        }
+        .fruit:active { cursor: grabbing; transform: scale(1.1); }
+
+        /* --- TELAS --- */
         #start-screen {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(46, 204, 113, 0.95);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 100;
         }
-
-        button {
-            background: #2ecc71;
-            border: none;
-            padding: 20px 40px;
-            font-size: 1.5rem;
-            color: white;
-            border-radius: 50px;
-            cursor: pointer;
-            box-shadow: 0 5px 0 #27ae60;
-            font-family: inherit;
+        .big-btn {
+            background: #fff; color: #2ecc71;
+            border: none; padding: 20px 60px;
+            font-size: 2rem; border-radius: 50px;
+            cursor: pointer; box-shadow: 0 8px 0 #27ae60;
+            font-weight: bold;
         }
-        button:active {
-            transform: translateY(5px);
-            box-shadow: none;
-        }
+        .big-btn:active { transform: translateY(8px); box-shadow: none; }
 
         /* --- ANIMAÇÕES --- */
-        @keyframes burpShake {
-            0% { transform: translate(-50%, -50%) rotate(0deg); }
-            25% { transform: translate(-52%, -48%) rotate(-5deg) scale(1.1); }
-            50% { transform: translate(-48%, -52%) rotate(5deg) scale(1.1); }
-            75% { transform: translate(-52%, -48%) rotate(-5deg) scale(1.1); }
-            100% { transform: translate(-50%, -50%) rotate(0deg); }
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
         }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
 
-        .burping {
-            animation: burpShake 0.8s ease-in-out;
-        }
-
-        @keyframes popIn {
-            0% { transform: scale(0); }
-            80% { transform: scale(1.2); }
-            100% { transform: scale(1); }
-        }
-        
-        @keyframes numberPop {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.5); }
-            100% { transform: scale(1); }
-        }
-        
-        .number-pop {
-            animation: numberPop 0.3s ease-out;
-        }
     </style>
 </head>
 <body>
 
     <!-- TELA INICIAL -->
     <div id="start-screen">
-        <h1 style="color:white; margin-bottom: 20px;">O Monstro Comilão</h1>
-        <button onclick="startGame()">JOGAR</button>
-        <p style="color:white; margin-top:20px; font-size: 0.8rem;">Para a Lavine ❤️</p>
+        <h1 style="color:white; font-size: 3rem; text-shadow: 2px 2px 0 #000;">Monstro Comilão</h1>
+        <button class="big-btn" onclick="startGame()">JOGAR</button>
+        <p style="color:white; margin-top:20px;">Para a Lavine ❤️</p>
     </div>
 
-    <!-- ÁREA DO JOGO -->
+    <!-- CONTROLES LATERAIS -->
+    <div id="controls-sidebar">
+        <!-- Botão Vitamina -->
+        <div id="btn-blender" class="control-btn" onclick="toggleBlenderMode()" title="Fazer Vitamina">
+            <svg viewBox="0 0 24 24">
+                <path d="M19,19H5V8H19M19,8V6A2,2 0 0,0 17,4H7A2,2 0 0,0 5,6V8M19,19A2,2 0 0,1 17,21H7A2,2 0 0,1 5,19M9,13H15" fill="#333"/>
+            </svg>
+        </div>
+    </div>
+
+    <!-- BOTÃO DE COCÔ (ESCONDIDO) -->
+    <div id="poop-btn" onclick="doPoop()">
+        <span style="font-size: 40px;">💩</span>
+    </div>
+
     <div id="game-container">
         
         <!-- TEXTO DE INSTRUÇÃO -->
         <div id="ui-layer">
-            <div id="instruction-text">Toque em JOGAR!</div>
+            <div id="instruction-bubble">Clique em JOGAR!</div>
         </div>
 
-        <!-- O MONSTRO (SVG INLINE) -->
+        <!-- O MONSTRO -->
         <div id="monster-container">
-            <!-- Sensor Invisível da Boca -->
             <div id="mouth-sensor"></div>
-            
-            <!-- Barriga Transparente -->
-            <div id="belly-container">
-                <div id="eaten-fruits-visuals"></div>
-                <div id="belly-counter"></div>
-            </div>
-
-            <svg viewBox="0 0 300 350" xmlns="http://www.w3.org/2000/svg">
+            <svg id="monster-svg" viewBox="0 0 300 350" xmlns="http://www.w3.org/2000/svg">
                 <!-- Corpo -->
-                <path d="M50 300 Q20 350 80 340 L220 340 Q280 350 250 300 Q280 200 250 100 Q230 20 150 20 Q70 20 50 100 Q20 200 50 300" fill="#7bed9f" stroke="#2ecc71" stroke-width="5"/>
+                <path id="monster-body" d="M50 300 Q20 350 80 340 L220 340 Q280 350 250 300 Q280 200 250 100 Q230 20 150 20 Q70 20 50 100 Q20 200 50 300" fill="#7bed9f" stroke="#2ecc71" stroke-width="5"/>
                 
-                <!-- Barriga (Visor) -->
+                <!-- Barriga -->
                 <circle cx="150" cy="250" r="60" fill="rgba(255,255,255,0.4)" stroke="#fff" stroke-width="3" />
                 
                 <!-- Olhos -->
-                <circle cx="100" cy="100" r="25" fill="white" />
-                <circle cx="200" cy="100" r="25" fill="white" />
-                <circle id="eye-left" cx="100" cy="100" r="10" fill="black" />
-                <circle id="eye-right" cx="200" cy="100" r="10" fill="black" />
+                <g id="eyes">
+                    <circle cx="100" cy="100" r="25" fill="white" stroke="#333" stroke-width="2"/>
+                    <circle cx="200" cy="100" r="25" fill="white" stroke="#333" stroke-width="2"/>
+                    <circle class="eye-pupil" id="eye-left" cx="100" cy="100" r="10" fill="black" />
+                    <circle class="eye-pupil" id="eye-right" cx="200" cy="100" r="10" fill="black" />
+                </g>
                 
-                <!-- Boca (Aberta) -->
-                <path d="M75 130 Q150 130 225 130 Q225 180 150 180 Q75 180 75 130 Z" fill="#333" />
-                <!-- Dentes -->
-                <path d="M85 130 L95 145 L105 130 M195 130 L205 145 L215 130" stroke="white" stroke-width="3" fill="white"/>
+                <!-- Boca Normal -->
+                <g id="mouth-group">
+                    <path class="mouth-path" d="M75 130 Q150 130 225 130 Q225 180 150 180 Q75 180 75 130 Z" fill="#333" />
+                    <path class="teeth" d="M85 130 L95 145 L105 130 M195 130 L205 145 L215 130" stroke="white" stroke-width="3" fill="white"/>
+                </g>
 
                 <!-- Braços -->
                 <path d="M60 200 Q20 220 30 180" stroke="#2ecc71" stroke-width="15" stroke-linecap="round" fill="none"/>
@@ -250,200 +262,314 @@
             </svg>
         </div>
 
-        <!-- As frutas serão geradas aqui via Javascript -->
+        <!-- LIQUIDIFICADOR -->
+        <div id="blender-container">
+            <div id="blender-sensor"></div>
+            <svg viewBox="0 0 140 200">
+                <!-- Copo -->
+                <path d="M20 40 L30 160 Q35 180 70 180 Q105 180 110 160 L120 40 Z" fill="rgba(200, 230, 255, 0.6)" stroke="#3498db" stroke-width="3"/>
+                <!-- Tampa -->
+                <rect x="15" y="30" width="110" height="15" rx="5" fill="#333"/>
+                <!-- Base -->
+                <rect x="25" y="180" width="90" height="20" fill="#e74c3c"/>
+                <!-- Conteúdo (Líquido) -->
+                <path id="blender-liquid" d="M25 160 Q35 175 70 175 Q105 175 115 160 L118 100 Q70 110 22 100 Z" fill="#e67e22" opacity="0"/>
+            </svg>
+        </div>
+
     </div>
 
     <!-- SCRIPT DO JOGO -->
     <script>
-        // --- CONFIGURAÇÕES ---
+        // --- DADOS DAS FRUTAS (SVGs INLINE) ---
         const fruitsData = {
-            'morango': { color: '#e74c3c', shape: '<path d="M35 10 Q55 10 60 25 Q65 60 35 70 Q5 60 10 25 Q15 10 35 10 Z" fill="#e74c3c"/><path d="M35 10 L30 5 M35 10 L40 5 M35 10 L35 2" stroke="green" stroke-width="3"/>' },
+            'morango': { color: '#e74c3c', shape: '<path d="M35 10 Q55 10 60 25 Q65 60 35 70 Q5 60 10 25 Q15 10 35 10 Z" fill="#e74c3c" stroke="#c0392b"/><path d="M35 10 L30 5 M35 10 L40 5 M35 10 L35 2" stroke="green" stroke-width="3"/>' },
             'banana': { color: '#f1c40f', shape: '<path d="M10 50 Q35 70 60 20 Q65 15 60 15 Q40 60 10 40 Z" fill="#f1c40f" stroke="#f39c12" stroke-width="2"/>' },
             'maçã': { color: '#c0392b', shape: '<circle cx="35" cy="40" r="25" fill="#c0392b"/><path d="M35 15 Q45 5 45 15" fill="none" stroke="green" stroke-width="3"/>' },
-            'uva': { color: '#8e44ad', shape: '<circle cx="35" cy="50" r="10" fill="#8e44ad"/><circle cx="25" cy="35" r="10" fill="#8e44ad"/><circle cx="45" cy="35" r="10" fill="#8e44ad"/><circle cx="35" cy="20" r="10" fill="#8e44ad"/>' }
+            'uva': { color: '#8e44ad', shape: '<circle cx="35" cy="50" r="10" fill="#8e44ad"/><circle cx="25" cy="35" r="10" fill="#8e44ad"/><circle cx="45" cy="35" r="10" fill="#8e44ad"/><circle cx="35" cy="20" r="10" fill="#8e44ad"/>' },
+            'laranja': { color: '#e67e22', shape: '<circle cx="35" cy="35" r="30" fill="#e67e22" stroke="#d35400"/><circle cx="35" cy="35" r="2" fill="#d35400" opacity="0.5"/><circle cx="20" cy="25" r="1" fill="#d35400" opacity="0.5"/><circle cx="50" cy="45" r="1" fill="#d35400" opacity="0.5"/>' },
+            'pera': { color: '#badc58', shape: '<path d="M35 5 Q55 10 55 45 Q55 65 35 65 Q15 65 15 45 Q15 10 35 5 Z" fill="#badc58" stroke="#6ab04c"/><path d="M35 5 L35 0" stroke="#5d4037" stroke-width="3"/>' },
+            'melancia': { color: '#2ecc71', shape: '<path d="M5 20 Q35 65 65 20" fill="#ff6b6b" stroke="#2ecc71" stroke-width="4"/><circle cx="35" cy="35" r="2" fill="black"/><circle cx="25" cy="25" r="2" fill="black"/><circle cx="45" cy="25" r="2" fill="black"/>' },
+            'abacaxi': { color: '#f9ca24', shape: '<ellipse cx="35" cy="45" rx="20" ry="25" fill="#f9ca24" stroke="#f0932b"/><path d="M35 20 L25 5 L30 10 L35 0 L40 10 L45 5 L35 20" fill="green"/>' },
+            'limão': { color: '#6ab04c', shape: '<ellipse cx="35" cy="35" rx="25" ry="20" fill="#badc58" stroke="#6ab04c"/>' }
         };
 
-        const maxNumber = 6; // Máximo de frutas para pedir
-        let currentTarget = 0;
-        let currentFruitType = '';
-        let currentCount = 0;
-        let isPlaying = false;
+        // --- ESTADO DO JOGO ---
+        let state = {
+            mode: 'normal', // 'normal' ou 'blender'
+            targetCount: 0, // Frutas restantes para pedir
+            targetType: '', // Tipo atual no modo normal
+            blenderRecipe: {}, // Ex: { banana: 2, morango: 1 } no modo vitamina
+            blenderContent: [], // O que já foi colocado
+            poopMeter: 0, // 0 a 100. 100 = precisa fazer cocô
+            isPlaying: false,
+            needsPoop: false
+        };
+
+        const MAX_POOP = 6; // Quantidade de frutas/vitaminas até dar vontade de ir ao banheiro
 
         // Elementos DOM
-        const instructionText = document.getElementById('instruction-text');
-        const bellyCounter = document.getElementById('belly-counter');
-        const eatenFruitsVisuals = document.getElementById('eaten-fruits-visuals');
-        const monsterContainer = document.getElementById('monster-container');
-        const gameContainer = document.getElementById('game-container');
-        const mouthSensor = document.getElementById('mouth-sensor');
+        const els = {
+            instruction: document.getElementById('instruction-bubble'),
+            monster: document.getElementById('monster-container'),
+            blender: document.getElementById('blender-container'),
+            blenderSensor: document.getElementById('blender-sensor'),
+            blenderLiquid: document.getElementById('blender-liquid'),
+            mouthSensor: document.getElementById('mouth-sensor'),
+            poopBtn: document.getElementById('poop-btn'),
+            gameContainer: document.getElementById('game-container'),
+            btnBlender: document.getElementById('btn-blender')
+        };
 
-        // --- SISTEMA DE ÁUDIO ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        
-        function speak(text) {
-            window.speechSynthesis.cancel();
+
+        // --- ÁUDIO E FALA ---
+        function speak(text, queue = false) {
+            if (!queue) window.speechSynthesis.cancel();
             
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'pt-BR';
-            utterance.rate = 1.0; 
-            utterance.pitch = 1.0; 
+            utterance.rate = 1.1; 
             
-            // Tenta pegar a melhor voz disponível
             const voices = window.speechSynthesis.getVoices();
-            // Tenta priorizar vozes do Google ou Samsung
-            const ptVoice = voices.find(v => v.lang.includes('pt-BR') && (v.name.includes('Google') || v.name.includes('Luciana')));
-            
-            if(ptVoice) utterance.voice = ptVoice;
+            // Tenta pegar a voz da Luciana ou Google
+            const preferredVoice = voices.find(v => v.name.includes('Google Português') || v.name.includes('Luciana'));
+            if(preferredVoice) utterance.voice = preferredVoice;
 
             window.speechSynthesis.speak(utterance);
         }
 
         function playSound(type) {
             if (audioCtx.state === 'suspended') audioCtx.resume();
-            
             const osc = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
-            
             osc.connect(gainNode);
             gainNode.connect(audioCtx.destination);
 
-            if (type === 'eat') {
+            const now = audioCtx.currentTime;
+
+            if (type === 'pop') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(); osc.stop(now + 0.1);
+            } else if (type === 'eat') {
                 osc.type = 'triangle';
-                osc.frequency.setValueAtTime(400, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
-                gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.1);
-            } else if (type === 'burp') {
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.linearRampToValueAtTime(100, now + 0.1);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                osc.start(); osc.stop(now + 0.15);
+            } else if (type === 'blender') {
                 osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-                osc.frequency.linearRampToValueAtTime(50, audioCtx.currentTime + 0.5);
-                gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
-                gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.5);
-            } else if (type === 'pop') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.1);
-            } else if (type === 'success') {
-                // Som agradável de acerto (Trrrrrim)
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(500, audioCtx.currentTime);
-                osc.frequency.linearRampToValueAtTime(1000, audioCtx.currentTime + 0.2);
-                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.2);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.2);
+                osc.frequency.setValueAtTime(100, now);
+                osc.frequency.linearRampToValueAtTime(150, now + 1.5);
+                gainNode.gain.setValueAtTime(0.2, now);
+                gainNode.gain.linearRampToValueAtTime(0, now + 1.5);
+                osc.start(); osc.stop(now + 1.5);
+            } else if (type === 'fart') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(50, now + 0.4);
+                gainNode.gain.setValueAtTime(0.5, now);
+                gainNode.gain.linearRampToValueAtTime(0, now + 0.4);
+                osc.start(); osc.stop(now + 0.4);
+            } else if (type === 'flush') {
+                // Som de descarga (ruído branco simulado)
+                const bufferSize = audioCtx.sampleRate * 1;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+                const noiseGain = audioCtx.createGain();
+                noiseGain.gain.setValueAtTime(0.5, now);
+                noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 1);
+                
+                noise.connect(noiseGain);
+                noiseGain.connect(audioCtx.destination);
+                noise.start();
             }
         }
 
-        // --- LÓGICA DO JOGO ---
+        // --- CONTROLE DE FLUXO ---
         function startGame() {
             document.getElementById('start-screen').style.display = 'none';
-            // Carrega vozes
-            window.speechSynthesis.getVoices();
             if (audioCtx.state === 'suspended') audioCtx.resume();
-            
-            newRound();
+            startRound();
         }
 
-        function newRound() {
-            isPlaying = true;
-            currentCount = 0;
-            bellyCounter.innerText = ''; // Limpa contador
-            eatenFruitsVisuals.innerHTML = ''; // Limpa visuais
+        function toggleBlenderMode() {
+            if (state.needsPoop) return; // Não troca se precisar fazer cocô
 
-            // Remove frutas antigas da tela
-            document.querySelectorAll('.fruit').forEach(el => el.remove());
+            state.mode = (state.mode === 'normal') ? 'blender' : 'normal';
+            
+            if (state.mode === 'blender') {
+                els.monster.classList.add('sick-face'); // Reusa a classe sick-face momentaneamente ou cria outra se quiser
+                els.blender.style.display = 'block';
+                document.body.classList.add('blender-active');
+                els.btnBlender.classList.add('btn-active');
+                els.monster.classList.remove('sick-face'); // Remove logo, foi só teste
+            } else {
+                els.blender.style.display = 'none';
+                document.body.classList.remove('blender-active');
+                els.btnBlender.classList.remove('btn-active');
+            }
+            startRound();
+        }
 
-            // Escolhe número e fruta
-            currentTarget = Math.floor(Math.random() * maxNumber) + 1;
-            const types = Object.keys(fruitsData);
-            currentFruitType = types[Math.floor(Math.random() * types.length)];
+        function checkPoopStatus() {
+            if (state.poopMeter >= MAX_POOP) {
+                state.needsPoop = true;
+                els.monster.classList.add('sick-face');
+                els.instruction.innerHTML = "Ai minha barriga! Preciso fazer cocô!";
+                speak("Ai ai ai, minha barriga! Preciso fazer cocô!");
+                els.poopBtn.style.display = 'flex';
+                
+                // Limpa frutas
+                document.querySelectorAll('.fruit').forEach(el => el.remove());
+                return true;
+            }
+            return false;
+        }
 
-            // Atualiza texto e fala
-            const plural = currentTarget > 1 ? 's' : '';
-            const textDisplay = `Quero <span id="target-number">${currentTarget}</span> ${capitalize(currentFruitType)}${plural}!`;
-            instructionText.innerHTML = textDisplay;
+        function doPoop() {
+            playSound('fart');
+            setTimeout(() => playSound('flush'), 500);
+            
+            state.poopMeter = 0;
+            state.needsPoop = false;
+            els.poopBtn.style.display = 'none';
+            els.monster.classList.remove('sick-face');
+            
+            speak("Ufa! Que alívio! Agora estou com fome de novo.");
             
             setTimeout(() => {
-                speak(`Eu quero ${currentTarget} ${currentFruitType}${plural}`);
-            }, 500);
-
-            spawnFruits();
+                startRound();
+            }, 3000);
         }
 
-        function spawnFruits() {
-            const totalFruitsToSpawn = 10;
-            for(let i=0; i<totalFruitsToSpawn; i++) {
-                createFruitElement(i);
+        function startRound() {
+            if (checkPoopStatus()) return;
+
+            state.isPlaying = true;
+            document.querySelectorAll('.fruit').forEach(el => el.remove());
+
+            if (state.mode === 'normal') {
+                setupNormalRound();
+            } else {
+                setupBlenderRound();
+            }
+            
+            moveEyes();
+        }
+
+        // --- LÓGICA MODO NORMAL ---
+        function setupNormalRound() {
+            const types = Object.keys(fruitsData);
+            state.targetType = types[Math.floor(Math.random() * types.length)];
+            state.targetCount = Math.floor(Math.random() * 3) + 1; // 1 a 3 frutas
+
+            const plural = state.targetCount > 1 ? 's' : '';
+            const msg = `Quero <span class="highlight-num">${state.targetCount}</span> ${capitalize(state.targetType)}${plural}!`;
+            
+            els.instruction.innerHTML = msg;
+            speak(`Eu quero ${state.targetCount} ${state.targetType}${plural}`);
+
+            spawnFruits(10);
+        }
+
+        // --- LÓGICA MODO VITAMINA ---
+        function setupBlenderRound() {
+            // Cria receita: 2 ingredientes
+            const types = Object.keys(fruitsData);
+            const type1 = types[Math.floor(Math.random() * types.length)];
+            let type2 = types[Math.floor(Math.random() * types.length)];
+            while(type1 === type2) type2 = types[Math.floor(Math.random() * types.length)];
+
+            const count1 = Math.floor(Math.random() * 2) + 1;
+            const count2 = Math.floor(Math.random() * 2) + 1;
+
+            state.blenderRecipe = { [type1]: count1, [type2]: count2 };
+            state.blenderContent = []; // Zera conteúdo atual
+            els.blenderLiquid.style.opacity = 0; // Esvazia copo
+
+            // Monta frase
+            const txt1 = `${count1} ${capitalize(type1)}${count1>1?'s':''}`;
+            const txt2 = `${count2} ${capitalize(type2)}${count2>1?'s':''}`;
+            
+            els.instruction.innerHTML = `Vitamina: <span class="highlight-num">${txt1}</span> e <span class="highlight-num">${txt2}</span>`;
+            speak(`Vamos fazer vitamina de ${type1} com ${type2}. Coloque tudo no liquidificador!`);
+
+            spawnFruits(12);
+        }
+
+        function spawnFruits(qtd) {
+            for(let i=0; i<qtd; i++) {
+                // Se for normal, garante algumas frutas certas. Se vitamina, garante ingredientes.
+                let type;
+                const types = Object.keys(fruitsData);
+                
+                if (Math.random() > 0.3) {
+                    // Chance maior de vir o que precisa
+                    if (state.mode === 'normal') {
+                        type = state.targetType;
+                    } else {
+                        const ingredients = Object.keys(state.blenderRecipe);
+                        type = ingredients[Math.floor(Math.random() * ingredients.length)];
+                    }
+                } else {
+                    type = types[Math.floor(Math.random() * types.length)];
+                }
+                
+                createFruit(type);
             }
         }
 
-        function createFruitElement(index) {
+        function createFruit(type) {
             const el = document.createElement('div');
             el.className = 'fruit';
-            
-            let type;
-            if (index < currentTarget) {
-                type = currentFruitType;
-            } else {
-                const types = Object.keys(fruitsData);
-                type = types[Math.floor(Math.random() * types.length)];
-            }
-
             el.dataset.type = type;
             el.innerHTML = `<svg viewBox="0 0 70 70">${fruitsData[type].shape}</svg>`;
-
+            
+            // Posição aleatória segura
             const x = Math.random() * (window.innerWidth - 80);
-            const y = Math.random() * (window.innerHeight - 100);
-            const centerX = window.innerWidth / 2;
-            const centerY = window.innerHeight / 2;
+            const y = Math.random() * (window.innerHeight - 150);
             
             el.style.left = x + 'px';
-            if (y > centerY - 150 && y < centerY + 150) {
-                 el.style.top = (y > centerY ? centerY + 160 : centerY - 200) + 'px';
-            } else {
-                el.style.top = y + 'px';
-            }
-
+            el.style.top = y + 'px';
             el.style.animation = 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-            addDragEvents(el);
-            gameContainer.appendChild(el);
+            
+            setupDrag(el);
+            els.gameContainer.appendChild(el);
         }
 
-        function addDragEvents(el) {
+        // --- SISTEMA DE ARRASTAR E SOLTAR ---
+        function setupDrag(el) {
             let startX, startY, initialLeft, initialTop;
 
             function onStart(e) {
+                if (!state.isPlaying) return;
                 e.preventDefault();
                 const touch = e.type === 'touchstart' ? e.touches[0] : e;
                 startX = touch.clientX;
                 startY = touch.clientY;
                 initialLeft = el.offsetLeft;
                 initialTop = el.offsetTop;
-                
                 el.style.zIndex = 1000;
-                
-                function onMove(moveEvent) {
-                    const moveTouch = moveEvent.type === 'touchmove' ? moveEvent.touches[0] : moveEvent;
-                    const dx = moveTouch.clientX - startX;
-                    const dy = moveTouch.clientY - startY;
-                    el.style.left = (initialLeft + dx) + 'px';
-                    el.style.top = (initialTop + dy) + 'px';
+
+                function onMove(me) {
+                    const mt = me.type === 'touchmove' ? me.touches[0] : me;
+                    el.style.left = (initialLeft + (mt.clientX - startX)) + 'px';
+                    el.style.top = (initialTop + (mt.clientY - startY)) + 'px';
                 }
 
-                function onEnd(endEvent) {
+                function onEnd() {
                     document.removeEventListener('mousemove', onMove);
                     document.removeEventListener('mouseup', onEnd);
                     document.removeEventListener('touchmove', onMove);
                     document.removeEventListener('touchend', onEnd);
-                    el.style.zIndex = 10;
+                    el.style.zIndex = 30;
                     checkDrop(el);
                 }
 
@@ -458,86 +584,125 @@
         }
 
         function checkDrop(el) {
-            if (!isPlaying) return;
+            const rect = el.getBoundingClientRect();
+            const cx = rect.left + rect.width/2;
+            const cy = rect.top + rect.height/2;
 
-            const mouthRect = mouthSensor.getBoundingClientRect();
-            const fruitRect = el.getBoundingClientRect();
-            const fruitCenterX = fruitRect.left + fruitRect.width / 2;
-            const fruitCenterY = fruitRect.top + fruitRect.height / 2;
-
-            if (fruitCenterX >= mouthRect.left && fruitCenterX <= mouthRect.right &&
-                fruitCenterY >= mouthRect.top && fruitCenterY <= mouthRect.bottom) {
-                
-                if (el.dataset.type === currentFruitType) {
-                    eatFruit(el);
-                } else {
-                    speak("Não, essa não!");
-                    playSound('pop');
+            if (state.mode === 'normal') {
+                const mouth = els.mouthSensor.getBoundingClientRect();
+                if (cx >= mouth.left && cx <= mouth.right && cy >= mouth.top && cy <= mouth.bottom) {
+                    if (el.dataset.type === state.targetType) {
+                        eatFruitNormal(el);
+                    } else {
+                        rejectItem();
+                    }
+                }
+            } else {
+                // Modo Vitamina
+                const blender = els.blenderSensor.getBoundingClientRect();
+                if (cx >= blender.left && cx <= blender.right && cy >= blender.top && cy <= blender.bottom) {
+                    checkBlenderIngredient(el);
                 }
             }
         }
 
-        function eatFruit(el) {
-            const clone = el.cloneNode(true);
+        function rejectItem() {
+            speak("Essa não!");
+            playSound('pop');
+        }
+
+        // --- AÇÕES DO MODO NORMAL ---
+        function eatFruitNormal(el) {
             el.remove();
-            
-            clone.className = 'eaten-fruit';
-            clone.style.position = 'relative';
-            clone.style.left = '0';
-            clone.style.top = '0';
-            clone.style.zIndex = '1';
-            
-            eatenFruitsVisuals.appendChild(clone);
-            
             playSound('eat');
+            state.targetCount--;
             
-            // ATUALIZAÇÃO DO CONTADOR VISUAL
-            currentCount++;
-            bellyCounter.innerText = currentCount;
-            
-            // Efeito visual no número
-            bellyCounter.classList.remove('number-pop');
-            void bellyCounter.offsetWidth; // trigger reflow
-            bellyCounter.classList.add('number-pop');
+            // Animação visual de engolir
+            speak(state.targetCount > 0 ? "Nham!" : "Delícia!");
 
-            // Feedback de áudio limpo - fala o número
-            speak(currentCount.toString());
-            
-            moveEyes();
-
-            if (currentCount >= currentTarget) {
-                completeLevel();
+            if (state.targetCount <= 0) {
+                state.poopMeter++;
+                state.isPlaying = false;
+                setTimeout(startRound, 2000);
             }
         }
 
-        function completeLevel() {
-            isPlaying = false;
-            playSound('burp');
-            monsterContainer.classList.add('burping');
-            instructionText.innerText = "Muito Bem!";
-            
-            setTimeout(() => {
-                // Fala mais limpa, sem onomatopeias robóticas
-                speak("Que delícia! Quero mais!");
-                monsterContainer.classList.remove('burping');
-                setTimeout(newRound, 2000);
-            }, 1000);
+        // --- AÇÕES DO MODO VITAMINA ---
+        function checkBlenderIngredient(el) {
+            const type = el.dataset.type;
+            const needed = state.blenderRecipe[type];
+
+            if (needed > 0) {
+                // Aceita fruta
+                state.blenderRecipe[type]--;
+                state.blenderContent.push(type);
+                el.remove();
+                playSound('pop');
+                
+                // Verifica se acabou
+                const totalRestante = Object.values(state.blenderRecipe).reduce((a,b)=>a+b, 0);
+                if (totalRestante === 0) {
+                    finishBlender();
+                } else {
+                    // Atualiza texto
+                    updateBlenderText();
+                }
+            } else {
+                // Ingrediente errado ou em excesso
+                rejectItem();
+            }
         }
 
-        function moveEyes() {
-            const leftEye = document.getElementById('eye-left');
-            const rightEye = document.getElementById('eye-right');
-            leftEye.setAttribute('cy', 110);
-            rightEye.setAttribute('cy', 110);
+        function updateBlenderText() {
+            const parts = [];
+            for (let [type, count] of Object.entries(state.blenderRecipe)) {
+                if (count > 0) parts.push(`${count} ${type}`);
+            }
+            if(parts.length > 0) speak("Falta " + parts.join(" e "));
+        }
+
+        function finishBlender() {
+            state.isPlaying = false;
+            els.instruction.innerHTML = "Misturando...";
+            playSound('blender');
+            
+            // Animação de bater
+            els.blender.classList.add('blender-shaking');
+            
             setTimeout(() => {
-                leftEye.setAttribute('cy', 100);
-                rightEye.setAttribute('cy', 100);
-            }, 200);
+                els.blender.classList.remove('blender-shaking');
+                els.blenderLiquid.style.opacity = 1; // Copo cheio
+                speak("Vitamina pronta! Glub glub glub!");
+                
+                // Simula monstro bebendo
+                setTimeout(() => {
+                    els.blenderLiquid.style.opacity = 0;
+                    state.poopMeter += 2; // Vitamina enche mais a barriga
+                    startRound();
+                }, 3000);
+            }, 1500);
+        }
+
+        // --- UTILITÁRIOS ---
+        function moveEyes() {
+            const left = document.getElementById('eye-left');
+            const right = document.getElementById('eye-right');
+            
+            // Movimento aleatório simples
+            const angle = Math.random() * Math.PI * 2;
+            const r = 5;
+            const dx = Math.cos(angle) * r;
+            const dy = Math.sin(angle) * r;
+            
+            left.setAttribute('cx', 100 + dx); left.setAttribute('cy', 100 + dy);
+            right.setAttribute('cx', 200 + dx); right.setAttribute('cy', 100 + dy);
         }
 
         function capitalize(s) {
             return s.charAt(0).toUpperCase() + s.slice(1);
         }
+        
+        setInterval(moveEyes, 2000);
 
     </script>
 </body>
