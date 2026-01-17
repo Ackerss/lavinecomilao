@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>O Monstro Comilão - Para Lavine</title>
     <style>
         /* --- ESTILOS GERAIS --- */
@@ -15,33 +15,45 @@
             touch-action: none; /* Impede rolagem no Android */
             user-select: none;
             -webkit-user-select: none;
+            /* Garante que o fundo ocupe tudo */
+            width: 100vw;
+            height: 100vh;
         }
 
         #game-container {
             position: relative;
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            height: 100%;
             overflow: hidden;
         }
 
         /* --- O MONSTRO --- */
         #monster-container {
             position: absolute;
-            top: 40%; 
+            top: 45%; /* Um pouco mais para baixo para dar espaço ao texto */
             left: 50%;
             transform: translate(-50%, -50%);
             width: 300px;
             height: 350px;
             z-index: 10;
-            transition: transform 0.5s ease;
+            transition: left 0.5s ease; /* Transição suave se mover de lado */
             pointer-events: none; 
+        }
+        
+        /* Animação de respiração no corpo todo */
+        .monster-idle {
+            animation: breathe 3s infinite ease-in-out;
+        }
+
+        #monster-svg {
+            overflow: visible; /* Permite que braços saiam da caixa se preciso */
         }
 
         #mouth-sensor {
             position: absolute;
             top: 130px; left: 75px; width: 150px; height: 100px; 
             z-index: 15;
-            /* border: 1px solid red; /* Descomente para ver a área da boca */
+            /* background: rgba(255,0,0,0.2); /* Debug: descomente para ver a boca */
         }
 
         /* --- BARRIGA (VISUAL) --- */
@@ -67,7 +79,7 @@
             position: relative !important; transform: none !important; left: auto !important; top: auto !important;
         }
 
-        /* Expressões do Monstro */
+        /* --- ESTADOS DO MONSTRO --- */
         .sick-face #monster-body { fill: #a8d5ba !important; transition: fill 0.5s; }
         .sick-face .eye-pupil { transform: scale(0.5); }
         .sick-face .mouth-path { d: path("M75 150 Q110 140 150 150 Q190 160 225 150"); fill: none; stroke: #333; stroke-width: 5; }
@@ -77,56 +89,53 @@
         .mouth-open .mouth-path { d: path("M75 130 Q150 130 225 130 Q225 210 150 210 Q75 210 75 130 Z") !important; }
         .mouth-open .teeth { display: none; }
 
-        /* --- CESTA DE FRUTAS (VISUAL NOVO) --- */
+        /* --- CESTA DE FRUTAS --- */
         #fruit-basket {
             position: absolute;
-            bottom: 20px;
+            bottom: 10px;
             left: 50%;
             transform: translateX(-50%);
-            width: 90%;
-            max-width: 500px;
-            height: 100px;
+            width: 95%;
+            max-width: 600px;
+            height: 110px;
             
-            /* Visual de Cesta de Vime */
+            /* Visual de Cesta */
             background: repeating-linear-gradient(45deg, #d2691e 0, #d2691e 10px, #8b4513 10px, #8b4513 20px);
             border-radius: 10px 10px 50px 50px;
             border: 5px solid #8b4513;
             box-shadow: 0 10px 20px rgba(0,0,0,0.3) inset;
             
             display: flex;
-            justify-content: space-around;
+            justify-content: space-evenly; /* Distribui melhor */
             align-items: center;
             z-index: 50;
             padding: 0 10px;
+            padding-bottom: env(safe-area-inset-bottom); /* Para iPhone X+ */
         }
-        /* Borda superior da cesta para dar profundidade */
+        
+        /* Borda superior da cesta */
         #fruit-basket::before {
             content: '';
-            position: absolute;
-            top: -15px;
-            left: -5px;
-            right: -5px;
-            height: 20px;
-            border-radius: 10px;
-            background: #a0522d;
-            border: 2px solid #5c3317;
-            z-index: -1;
+            position: absolute; top: -15px; left: -5px; right: -5px; height: 20px;
+            border-radius: 10px; background: #a0522d; border: 2px solid #5c3317; z-index: -1;
         }
 
         .basket-item {
-            width: 65px;
-            height: 65px;
+            width: 70px; /* Um pouco maior */
+            height: 70px;
             position: relative;
             cursor: grab;
             transition: transform 0.1s;
-            margin-top: -30px; /* Faz a fruta "sair" um pouco da cesta */
+            margin-top: -40px; /* Sai mais da cesta para ver melhor */
             filter: drop-shadow(2px 5px 5px rgba(0,0,0,0.4));
+            z-index: 55; /* Garante que fique acima da borda da cesta */
+            touch-action: none;
         }
         .basket-item:active { transform: scale(0.9); }
 
         /* Fruta sendo arrastada */
         .fruit-drag {
-            width: 80px; height: 80px;
+            width: 90px; height: 90px;
             position: absolute;
             z-index: 1000;
             pointer-events: none; 
@@ -136,20 +145,20 @@
         /* --- LIQUIDIFICADOR --- */
         #blender-wrapper {
             position: absolute;
-            bottom: 150px; /* Posição segura acima da cesta */
-            right: 10px;
-            width: 140px;
-            height: 200px;
+            bottom: 160px; /* Subi um pouco para não bater na cesta em telas curtas */
+            right: 20px;
+            width: 120px;
+            height: 180px;
             z-index: 60;
             display: none;
-            touch-action: none; /* CRÍTICO PARA ANDROID */
+            touch-action: none; 
         }
         
         #blender-container {
             width: 100%;
             height: 100%;
             transform-origin: center bottom;
-            transition: transform 0.1s linear; /* Movimento rápido */
+            transition: transform 0.1s linear; 
         }
 
         .blender-ready {
@@ -157,47 +166,45 @@
             animation: pulse-ready 1s infinite;
             filter: drop-shadow(0 0 15px gold);
         }
-        /* Classe usada durante a animação de beber */
+        
+        /* CORREÇÃO DA ANIMAÇÃO DE BEBER */
         .blender-drinking-anim {
-            transition: transform 0.5s ease-in-out !important;
-            transform: translate(-150px, -150px) rotate(-110deg) !important; /* Vai até a boca e vira */
+            transition: transform 0.6s ease-in-out !important;
+            /* Rotação ajustada para -70deg (menos invertido) e posição ajustada para a boca */
+            transform: translate(-180px, -120px) rotate(-70deg) !important; 
             z-index: 200 !important;
         }
 
-        #blender-sensor { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 61; }
+        #blender-sensor { position: absolute; top: -20px; left: -20px; width: 140%; height: 140%; z-index: 61; }
         
-        .blender-active #monster-container { left: 30%; } /* Afasta monstro */
+        .blender-active #monster-container { left: 35%; } /* Afasta monstro */
         .blender-shaking { animation: shake 0.5s infinite; }
         
-        /* --- ANIMAÇÃO DO COCÔ --- */
+        /* --- EFEITOS ESPECIAIS --- */
         .poop-drop {
             position: absolute; font-size: 80px; z-index: 5;
             animation: dropPoop 2s forwards; left: 50%; top: 55%;
         }
-        @keyframes dropPoop {
-            0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; }
-            20% { opacity: 1; transform: translate(-50%, 20px) scale(1); }
-            100% { transform: translate(-50%, 400px) scale(1); opacity: 0; }
-        }
 
         /* --- CONTROLES LATERAIS --- */
         #controls-sidebar {
-            position: absolute; right: 10px; top: 30%;
-            display: flex; flex-direction: column; gap: 15px; z-index: 50;
+            position: absolute; right: 15px; top: 15px; /* Mudei para o topo para limpar a área de jogo */
+            display: flex; flex-direction: row; /* Horizontal no topo */
+            gap: 15px; z-index: 50;
         }
         .control-btn {
-            width: 60px; height: 60px; background: white; border-radius: 50%;
-            border: 4px solid #3498db; cursor: pointer; display: flex; justify-content: center; align-items: center;
-            box-shadow: 0 4px 0 #2980b9; transition: transform 0.1s;
+            width: 50px; height: 50px; background: white; border-radius: 50%;
+            border: 3px solid #3498db; cursor: pointer; display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 3px 0 #2980b9; transition: transform 0.1s;
         }
-        .control-btn:active { transform: translateY(4px); box-shadow: none; }
-        .control-btn svg { width: 35px; height: 35px; fill: #333; }
-        .btn-active { background: #ffeaa7; border-color: #f1c40f; box-shadow: 0 4px 0 #d35400; }
-        #btn-color { border-color: #9b59b6; box-shadow: 0 4px 0 #8e44ad; }
+        .control-btn:active { transform: translateY(3px); box-shadow: none; }
+        .control-btn svg { width: 30px; height: 30px; fill: #333; }
+        .btn-active { background: #ffeaa7; border-color: #f1c40f; box-shadow: 0 3px 0 #d35400; }
+        #btn-color { border-color: #9b59b6; box-shadow: 0 3px 0 #8e44ad; }
 
         /* Botão de Cocô */
         #poop-btn {
-            position: absolute; bottom: 140px; left: 20px; 
+            position: absolute; top: 50%; right: 20px; transform: translateY(-50%);
             width: 80px; height: 80px; background: #fff; border-radius: 50%;
             border: 4px solid #e74c3c; display: none; justify-content: center; align-items: center;
             z-index: 60; animation: pulse 1s infinite; cursor: pointer;
@@ -205,43 +212,74 @@
         }
 
         /* --- UI E TEXTOS --- */
-        #ui-layer { position: absolute; top: 10px; width: 100%; text-align: center; z-index: 20; pointer-events: none; }
+        #ui-layer { position: absolute; top: 80px; width: 100%; text-align: center; z-index: 20; pointer-events: none; }
         #instruction-bubble {
             background: white; padding: 10px 20px; border-radius: 30px; display: inline-block;
-            border: 3px solid #333; font-size: 1.5rem; box-shadow: 5px 5px 0 rgba(0,0,0,0.1); max-width: 90%;
+            border: 3px solid #333; font-size: 1.4rem; box-shadow: 5px 5px 0 rgba(0,0,0,0.1); max-width: 85%;
+            transition: transform 0.2s;
         }
-        .highlight-num { color: #e74c3c; font-weight: bold; font-size: 1.8rem; }
+        .highlight-num { color: #e74c3c; font-weight: bold; font-size: 1.6rem; }
 
         /* --- TELA INICIAL --- */
         #start-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(46, 204, 113, 0.95); display: flex; flex-direction: column;
+            background: rgba(46, 204, 113, 0.98); display: flex; flex-direction: column;
             justify-content: center; align-items: center; z-index: 100;
         }
         .big-btn {
             background: #fff; color: #2ecc71; border: none; padding: 20px 60px;
             font-size: 2rem; border-radius: 50px; cursor: pointer;
-            box-shadow: 0 8px 0 #27ae60; font-weight: bold;
+            box-shadow: 0 8px 0 #27ae60; font-weight: bold; margin-top: 20px;
         }
         .big-btn:active { transform: translateY(8px); box-shadow: none; }
 
-        /* --- MEDIA QUERIES --- */
-        @media (max-width: 768px) {
-            #monster-container { width: 250px; height: 300px; top: 45%; }
-            #mouth-sensor { top: 110px; left: 60px; width: 130px; }
-            #belly-container { top: 180px; left: 75px; width: 100px; }
-            #instruction-bubble { font-size: 1.1rem; }
-            .basket-item { width: 55px; height: 55px; }
-            #blender-wrapper { bottom: 130px; right: 5px; transform: scale(0.8); } /* Liquidificador menor no celular */
-            .blender-active #monster-container { left: 10%; } /* Monstro bem na esquerda no celular */
-        }
-
+        /* --- ANIMAÇÕES --- */
+        @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
+        @keyframes blink { 0%, 100% { transform: scaleY(1); } 5% { transform: scaleY(0.1); } 10% { transform: scaleY(1); } }
+        @keyframes floatArm { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(5deg); } }
         @keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-1deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 100% { transform: translate(1px, -2px) rotate(-1deg); } }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
         @keyframes pulse-ready { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-        @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
+        @keyframes dropPoop { 0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; } 20% { opacity: 1; transform: translate(-50%, 20px) scale(1); } 100% { transform: translate(-50%, 400px) scale(1); opacity: 0; } }
         @keyframes numberPop { 0% { transform: scale(1); } 50% { transform: scale(1.5); } 100% { transform: scale(1); } }
         .number-pop { animation: numberPop 0.3s ease-out; }
+
+        /* Aplicando animações extras */
+        .blink-anim { animation: blink 3s infinite; transform-origin: center; }
+        .arm-left { animation: floatArm 2s infinite ease-in-out alternate; transform-origin: 60px 200px; }
+        .arm-right { animation: floatArm 2.5s infinite ease-in-out alternate-reverse; transform-origin: 240px 200px; }
+
+        /* --- MEDIA QUERIES (CELULAR) --- */
+        @media (max-width: 768px) {
+            #monster-container { width: 260px; height: 310px; top: 50%; } /* Monstro um pouco menor */
+            #mouth-sensor { top: 110px; left: 60px; width: 140px; }
+            #belly-container { top: 180px; left: 80px; width: 100px; }
+            
+            #instruction-bubble { font-size: 1.1rem; padding: 8px 15px; }
+            #ui-layer { top: 70px; }
+            
+            .basket-item { width: 60px; height: 60px; margin-top: -30px; }
+            #fruit-basket { height: 90px; }
+            
+            /* Ajuste do liquidificador para telas pequenas */
+            #blender-wrapper { bottom: 130px; right: 10px; transform: scale(0.85); transform-origin: bottom right; } 
+            
+            /* Ajuste da animação de beber no celular */
+            .blender-drinking-anim {
+                transform: translate(-180px, -150px) rotate(-70deg) !important;
+            }
+
+            .blender-active #monster-container { left: 15%; } /* Joga o monstro bem pra esquerda */
+        }
+        
+        /* Ajuste para telas muito curtas (Landscape no celular) */
+        @media (max-height: 500px) {
+            #monster-container { transform: translate(-50%, -50%) scale(0.7); top: 50%; }
+            #fruit-basket { height: 80px; bottom: 0; }
+            #blender-wrapper { bottom: 90px; right: 5px; transform: scale(0.7); }
+            #ui-layer { top: 10px; }
+            #controls-sidebar { top: 10px; right: 10px; }
+        }
 
     </style>
 </head>
@@ -249,12 +287,13 @@
 
     <!-- TELA INICIAL -->
     <div id="start-screen">
-        <h1 style="color:white; font-size: 2.5rem; text-shadow: 2px 2px 0 #000; text-align:center;">Monstro Comilão</h1>
+        <h1 style="color:white; font-size: 2.5rem; text-shadow: 2px 2px 0 #000; text-align:center; margin: 0 20px;">O Monstro Comilão</h1>
+        <div style="font-size: 4rem; margin: 10px;">🦖🍎</div>
         <button class="big-btn" onclick="startGame()">JOGAR</button>
-        <p style="color:white; margin-top:20px;">Para a Lavine ❤️</p>
+        <p style="color:white; margin-top:20px; font-weight:bold;">Para a Lavine ❤️</p>
     </div>
 
-    <!-- CONTROLES LATERAIS -->
+    <!-- CONTROLES (TOPO DIREITO AGORA) -->
     <div id="controls-sidebar">
         <div id="btn-blender" class="control-btn" onclick="toggleBlenderMode()" title="Fazer Vitamina">
             <svg viewBox="0 0 24 24"><path d="M19,19H5V8H19M19,8V6A2,2 0 0,0 17,4H7A2,2 0 0,0 5,6V8M19,19A2,2 0 0,1 17,21H7A2,2 0 0,1 5,19M9,13H15" fill="#333"/></svg>
@@ -264,7 +303,7 @@
         </div>
     </div>
 
-    <!-- BOTÃO DE COCÔ -->
+    <!-- BOTÃO DE COCÔ (LATERAL) -->
     <div id="poop-btn" onclick="doPoop()">
         <span style="font-size: 40px;">💩</span>
     </div>
@@ -274,7 +313,7 @@
             <div id="instruction-bubble">Clique em JOGAR!</div>
         </div>
 
-        <div id="monster-container">
+        <div id="monster-container" class="monster-idle">
             <div id="mouth-sensor"></div>
             <div id="belly-container">
                 <div id="eaten-fruits-visuals"></div>
@@ -283,29 +322,41 @@
             <svg id="monster-svg" viewBox="0 0 300 350" xmlns="http://www.w3.org/2000/svg">
                 <path id="monster-body" d="M50 300 Q20 350 80 340 L220 340 Q280 350 250 300 Q280 200 250 100 Q230 20 150 20 Q70 20 50 100 Q20 200 50 300" fill="#7bed9f" stroke="#2ecc71" stroke-width="5"/>
                 <circle cx="150" cy="250" r="60" fill="rgba(255,255,255,0.5)" stroke="#fff" stroke-width="3" />
+                
                 <g id="eyes">
-                    <circle cx="100" cy="100" r="25" fill="white" stroke="#333" stroke-width="2"/>
-                    <circle cx="200" cy="100" r="25" fill="white" stroke="#333" stroke-width="2"/>
-                    <circle class="eye-pupil" id="eye-left" cx="100" cy="100" r="10" fill="black" />
-                    <circle class="eye-pupil" id="eye-right" cx="200" cy="100" r="10" fill="black" />
+                    <!-- Adicionei classes para animar -->
+                    <g class="blink-anim" style="animation-delay: 0s;">
+                        <circle cx="100" cy="100" r="25" fill="white" stroke="#333" stroke-width="2"/>
+                        <circle class="eye-pupil" id="eye-left" cx="100" cy="100" r="10" fill="black" />
+                    </g>
+                    <g class="blink-anim" style="animation-delay: 0.1s;">
+                        <circle cx="200" cy="100" r="25" fill="white" stroke="#333" stroke-width="2"/>
+                        <circle class="eye-pupil" id="eye-right" cx="200" cy="100" r="10" fill="black" />
+                    </g>
                 </g>
+                
                 <g id="mouth-group">
                     <path class="mouth-path" d="M75 130 Q150 130 225 130 Q225 180 150 180 Q75 180 75 130 Z" fill="#333" />
                     <path class="teeth" d="M85 130 L95 145 L105 130 M195 130 L205 145 L215 130" stroke="white" stroke-width="3" fill="white"/>
                 </g>
-                <path id="monster-arms-left" d="M60 200 Q20 220 30 180" stroke="#2ecc71" stroke-width="15" stroke-linecap="round" fill="none"/>
-                <path id="monster-arms-right" d="M240 200 Q280 220 270 180" stroke="#2ecc71" stroke-width="15" stroke-linecap="round" fill="none"/>
+                
+                <!-- Braços animados -->
+                <path id="monster-arms-left" class="arm-left" d="M60 200 Q20 220 30 180" stroke="#2ecc71" stroke-width="15" stroke-linecap="round" fill="none"/>
+                <path id="monster-arms-right" class="arm-right" d="M240 200 Q280 220 270 180" stroke="#2ecc71" stroke-width="15" stroke-linecap="round" fill="none"/>
             </svg>
         </div>
 
-        <!-- WRAPPER DO LIQUIDIFICADOR PARA FACILITAR DRAG -->
+        <!-- WRAPPER DO LIQUIDIFICADOR -->
         <div id="blender-wrapper">
-            <div id="blender-sensor"></div> <!-- Área de toque aumentada -->
+            <div id="blender-sensor"></div> 
             <div id="blender-container">
                 <svg viewBox="0 0 140 200">
-                    <path d="M20 40 L30 160 Q35 180 70 180 Q105 180 110 160 L120 40 Z" fill="rgba(200, 230, 255, 0.6)" stroke="#3498db" stroke-width="3"/>
+                    <!-- Base e Copo -->
+                    <path d="M20 40 L30 160 Q35 180 70 180 Q105 180 110 160 L120 40 Z" fill="rgba(200, 230, 255, 0.7)" stroke="#3498db" stroke-width="3"/>
                     <rect x="15" y="30" width="110" height="15" rx="5" fill="#333"/>
                     <rect x="25" y="180" width="90" height="20" fill="#e74c3c"/>
+                    
+                    <!-- Líquido -->
                     <path id="blender-liquid" d="M25 160 Q35 175 70 175 Q105 175 115 160 L118 100 Q70 110 22 100 Z" fill="#e67e22" opacity="0" style="transition: opacity 1s ease;"/>
                 </svg>
             </div>
@@ -323,7 +374,7 @@
             'morango': { color: '#e74c3c', shape: '<path d="M35 10 Q55 10 60 25 Q65 60 35 70 Q5 60 10 25 Q15 10 35 10 Z" fill="#e74c3c" stroke="#c0392b"/><path d="M35 10 L30 5 M35 10 L40 5 M35 10 L35 2" stroke="green" stroke-width="3"/>' },
             'banana': { color: '#f1c40f', shape: '<path d="M10 50 Q35 70 60 20 Q65 15 60 15 Q40 60 10 40 Z" fill="#f1c40f" stroke="#f39c12" stroke-width="2"/>' },
             'maçã': { color: '#c0392b', shape: '<circle cx="35" cy="40" r="25" fill="#c0392b"/><path d="M35 15 Q45 5 45 15" fill="none" stroke="green" stroke-width="3"/>' },
-            'uva': { color: '#8e44ad', shape: '<circle cx="35" cy="50" r="10" fill="#8e44ad"/><circle cx="25" cy="35" r="10" fill="#8e44ad"/><circle cx="45" cy="35" r="10" fill="#8e44ad"/><circle cx="35" cy="20" r="10" fill="#8e44ad"/>' },
+            'uva': { color: '#8e44ad', shape: '<g transform="translate(5,5)"><circle cx="30" cy="45" r="10" fill="#8e44ad"/><circle cx="20" cy="30" r="10" fill="#8e44ad"/><circle cx="40" cy="30" r="10" fill="#8e44ad"/><circle cx="30" cy="15" r="10" fill="#8e44ad"/><path d="M30 15 L30 5" stroke="green" stroke-width="2"/></g>' },
             'laranja': { color: '#e67e22', shape: '<circle cx="35" cy="35" r="30" fill="#e67e22" stroke="#d35400"/><circle cx="35" cy="35" r="2" fill="#d35400" opacity="0.5"/><circle cx="20" cy="25" r="1" fill="#d35400" opacity="0.5"/><circle cx="50" cy="45" r="1" fill="#d35400" opacity="0.5"/>' },
             'pera': { color: '#badc58', shape: '<path d="M35 5 Q55 10 55 45 Q55 65 35 65 Q15 65 15 45 Q15 10 35 5 Z" fill="#badc58" stroke="#6ab04c"/><path d="M35 5 L35 0" stroke="#5d4037" stroke-width="3"/>' },
             'melancia': { color: '#2ecc71', shape: '<path d="M5 20 Q35 65 65 20" fill="#ff6b6b" stroke="#2ecc71" stroke-width="4"/><circle cx="35" cy="35" r="2" fill="black"/><circle cx="25" cy="25" r="2" fill="black"/><circle cx="45" cy="25" r="2" fill="black"/>' },
@@ -370,7 +421,8 @@
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'pt-BR'; utterance.rate = 1.1; 
             const voices = window.speechSynthesis.getVoices();
-            const preferredVoice = voices.find(v => v.name.includes('Google Português') || v.name.includes('Luciana'));
+            // Tenta pegar voz feminina do Google ou qualquer outra pt-BR
+            const preferredVoice = voices.find(v => v.name.includes('Google Português') || v.name.includes('Luciana') || v.lang === 'pt-BR');
             if(preferredVoice) utterance.voice = preferredVoice;
             window.speechSynthesis.speak(utterance);
         }
@@ -415,6 +467,16 @@
             if (audioCtx.state === 'suspended') audioCtx.resume();
             setupBlenderDrag();
             startRound();
+            
+            // Randomiza o piscar de olhos para ficar natural
+            setInterval(() => {
+                const eyes = document.querySelectorAll('.blink-anim');
+                eyes.forEach(eye => {
+                    eye.style.animation = 'none';
+                    eye.offsetHeight; /* trigger reflow */
+                    eye.style.animation = `blink ${2 + Math.random()}s infinite`;
+                });
+            }, 5000);
         }
 
         function toggleColor() {
@@ -423,6 +485,9 @@
             const theme = monsterColors[colorIndex];
             els.monsterBody.setAttribute('fill', theme.fill);
             els.monsterBody.setAttribute('stroke', theme.stroke);
+            // Atualiza cor dos braços também
+            document.getElementById('monster-arms-left').setAttribute('stroke', theme.stroke);
+            document.getElementById('monster-arms-right').setAttribute('stroke', theme.stroke);
             playSound('pop');
         }
 
@@ -430,6 +495,7 @@
             if (state.poopMeter >= MAX_POOP) {
                 state.needsPoop = true;
                 els.monster.classList.add('sick-face');
+                els.monster.classList.remove('monster-idle'); // Para de respirar quando doente
                 els.instruction.innerHTML = "Ai minha barriga!";
                 speak("Ai ai ai, minha barriga! Preciso fazer cocô!");
                 els.poopBtn.style.display = 'flex';
@@ -454,6 +520,7 @@
             state.poopMeter = 0; state.needsPoop = false;
             els.poopBtn.style.display = 'none';
             els.monster.classList.remove('sick-face');
+            els.monster.classList.add('monster-idle'); // Volta a respirar
             els.basket.style.opacity = '1';
             els.basket.style.pointerEvents = 'auto';
             const theme = monsterColors[colorIndex];
@@ -487,25 +554,40 @@
             state.isPlaying = true;
             state.blenderReady = false;
             els.blenderContainer.classList.remove('blender-ready');
-            els.basket.innerHTML = '';
+            els.basket.innerHTML = ''; // Limpa cesta visualmente
 
             if (state.mode === 'normal') setupNormalRound();
             else setupBlenderRound();
+            
+            // Re-centraliza pupilas
+            const left = document.getElementById('eye-left');
+            const right = document.getElementById('eye-right');
+            left.setAttribute('cx', 100); left.setAttribute('cy', 100);
+            right.setAttribute('cx', 200); right.setAttribute('cy', 100);
             moveEyes();
         }
 
         function fillBasket(requiredTypes) {
+            // Garante que a cesta esteja vazia antes de encher
+            els.basket.innerHTML = ''; 
+            
             let options = [...requiredTypes];
             const allTypes = Object.keys(fruitsData);
+            
+            // Completa até ter 4 ou 5 frutas
             while(options.length < 5) {
                 const randomType = allTypes[Math.floor(Math.random() * allTypes.length)];
                 if(!options.includes(randomType)) options.push(randomType);
             }
+            
+            // Embaralha
             options.sort(() => Math.random() - 0.5);
+            
             options.forEach(type => {
                 const item = document.createElement('div');
                 item.className = 'basket-item';
-                item.innerHTML = `<svg viewBox="0 0 70 70" style="pointer-events:none;">${fruitsData[type].shape}</svg>`;
+                // Adicionei pointer-events: none no SVG para garantir que o clique vá na DIV
+                item.innerHTML = `<svg viewBox="0 0 70 70" style="pointer-events:none; width:100%; height:100%;">${fruitsData[type].shape}</svg>`;
                 item.dataset.type = type;
                 item.addEventListener('touchstart', handleBasketTouchStart, {passive: false});
                 item.addEventListener('mousedown', handleBasketTouchStart);
@@ -525,16 +607,17 @@
             dragEl.dataset.type = type;
             dragEl.innerHTML = `<svg viewBox="0 0 70 70">${fruitsData[type].shape}</svg>`;
             
-            dragEl.style.left = (touch.clientX - 40) + 'px';
-            dragEl.style.top = (touch.clientY - 40) + 'px';
+            // Centraliza no dedo
+            dragEl.style.left = (touch.clientX - 45) + 'px';
+            dragEl.style.top = (touch.clientY - 45) + 'px';
             els.gameContainer.appendChild(dragEl);
             state.activeDrag = dragEl;
 
             const moveHandler = (me) => {
                 if(!state.activeDrag) return;
                 const mt = me.type === 'touchmove' ? me.touches[0] : me;
-                state.activeDrag.style.left = (mt.clientX - 40) + 'px';
-                state.activeDrag.style.top = (mt.clientY - 40) + 'px';
+                state.activeDrag.style.left = (mt.clientX - 45) + 'px';
+                state.activeDrag.style.top = (mt.clientY - 45) + 'px';
             };
             const endHandler = () => {
                 document.removeEventListener('mousemove', moveHandler);
@@ -661,11 +744,11 @@
             }, 1500);
         }
 
-        // --- DRAG DO LIQUIDIFICADOR (CORRIGIDO) ---
+        // --- DRAG DO LIQUIDIFICADOR ---
         function setupBlenderDrag() {
             let startX, startY, initialX, initialY;
-            const wrapper = els.blenderWrapper; // O que move
-            const container = els.blenderContainer; // O visual
+            const wrapper = els.blenderWrapper; 
+            const container = els.blenderContainer;
 
             function onStart(e) {
                 if (!state.blenderReady) return;
@@ -673,11 +756,6 @@
                 const touch = e.type === 'touchstart' ? e.touches[0] : e;
                 startX = touch.clientX; startY = touch.clientY;
                 
-                // Pega posição atual
-                const rect = wrapper.getBoundingClientRect();
-                initialX = rect.left;
-                initialY = rect.top;
-
                 wrapper.style.zIndex = 1000;
 
                 function onMove(me) {
@@ -729,7 +807,7 @@
                 document.addEventListener('touchend', onEnd);
             }
 
-            // Adiciona listeners ao SENSOR (área maior)
+            // Adiciona listeners ao SENSOR
             els.blenderSensor.addEventListener('mousedown', onStart);
             els.blenderSensor.addEventListener('touchstart', onStart, {passive: false});
         }
@@ -761,7 +839,7 @@
                     state.poopMeter += 2;
                     startRound();
                 }, 1500);
-            }, 500);
+            }, 600);
         }
 
         function resetBlender() {
@@ -772,17 +850,21 @@
         }
 
         function moveEyes() {
+            if(state.needsPoop) return; // Não move os olhos se tiver passando mal
             const left = document.getElementById('eye-left');
             const right = document.getElementById('eye-right');
             const angle = Math.random() * Math.PI * 2;
             const r = 5;
             const dx = Math.cos(angle) * r;
             const dy = Math.sin(angle) * r;
+            // Transição suave via JS pode ser custosa, mas aqui é simples
+            // Vamos apenas setar as posições, o CSS cuida se tivesse transição, mas svg attr não anima com CSS transition facilmente
+            // Então é "pulo" instantâneo a cada 2s, o que dá charme de desenho
             left.setAttribute('cx', 100 + dx); left.setAttribute('cy', 100 + dy);
             right.setAttribute('cx', 200 + dx); right.setAttribute('cy', 100 + dy);
         }
         function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
-        setInterval(moveEyes, 2000);
+        setInterval(moveEyes, 2500);
 
     </script>
 </body>
