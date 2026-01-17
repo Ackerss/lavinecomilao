@@ -27,69 +27,42 @@
         /* --- O MONSTRO --- */
         #monster-container {
             position: absolute;
-            top: 50%;
+            top: 40%; /* Subi um pouco para dar espaço pra cesta */
             left: 50%;
             transform: translate(-50%, -50%);
             width: 300px;
             height: 350px;
-            z-index: 10; /* Monstro fica numa camada média */
+            z-index: 10;
             transition: transform 0.5s ease;
             pointer-events: none; 
         }
 
-        /* Área da boca para detecção */
         #mouth-sensor {
             position: absolute;
-            top: 130px;
-            left: 75px;
-            width: 150px;
-            height: 80px;
-            z-index: 15;
+            top: 130px; left: 75px; width: 150px; height: 80px; z-index: 15;
         }
 
         /* --- BARRIGA (VISUAL) --- */
         #belly-container {
-            position: absolute;
-            top: 200px;
-            left: 90px;
-            width: 120px;
-            height: 100px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 12;
+            position: absolute; top: 200px; left: 90px; width: 120px; height: 100px;
+            display: flex; justify-content: center; align-items: center; z-index: 12;
             pointer-events: none;
         }
 
         #belly-counter {
-            font-size: 3.5rem;
-            font-weight: bold;
-            color: #fff;
-            text-shadow: 2px 2px 0 #000;
-            z-index: 14;
-            position: absolute;
+            font-size: 3.5rem; font-weight: bold; color: #fff; text-shadow: 2px 2px 0 #000;
+            z-index: 14; position: absolute;
         }
 
         #eaten-fruits-visuals {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            align-items: center;
-            opacity: 0.6;
-            z-index: 13;
+            position: absolute; width: 100%; height: 100%;
+            display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
+            opacity: 0.6; z-index: 13;
         }
 
         .eaten-fruit {
-            width: 25px !important;
-            height: 25px !important;
-            margin: 2px;
-            position: relative !important;
-            transform: none !important;
-            left: auto !important;
-            top: auto !important;
+            width: 25px !important; height: 25px !important; margin: 2px;
+            position: relative !important; transform: none !important; left: auto !important; top: auto !important;
         }
 
         /* Expressão de enjoo */
@@ -97,18 +70,52 @@
         .sick-face .eye-pupil { transform: scale(0.5); }
         .sick-face .mouth-path { d: path("M75 150 Q110 140 150 150 Q190 160 225 150"); fill: none; stroke: #333; stroke-width: 5; }
         .sick-face .teeth { display: none; }
-
-        /* Boca Aberta */
         .mouth-open .mouth-path { d: path("M75 130 Q150 130 225 130 Q225 200 150 200 Q75 200 75 130 Z") !important; }
         .mouth-open .teeth { display: none; }
+
+        /* --- CESTA DE FRUTAS (NOVO) --- */
+        #fruit-basket {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 120px; /* Altura da cesta */
+            background: #deb887; /* Cor de madeira clara */
+            border-top: 8px solid #8b4513; /* Borda de madeira escura */
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 50;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.2);
+            padding-bottom: 10px; /* Espaço seguro para iOS/Android */
+        }
+
+        /* Item dentro da cesta (Estático) */
+        .basket-item {
+            width: 70px;
+            height: 70px;
+            position: relative;
+            cursor: grab;
+            transition: transform 0.1s;
+        }
+        .basket-item:active { transform: scale(0.9); }
+
+        /* Fruta sendo arrastada (Dinâmica) */
+        .fruit-drag {
+            width: 80px; height: 80px;
+            position: absolute;
+            z-index: 1000;
+            pointer-events: none; /* Deixa o evento passar para o touch move global */
+            filter: drop-shadow(5px 10px 10px rgba(0,0,0,0.3));
+        }
 
         /* --- LIQUIDIFICADOR --- */
         #blender-container {
             position: absolute;
-            bottom: 20px;
+            bottom: 140px; /* Acima da cesta */
             right: 20px;
-            width: 140px;
-            height: 200px;
+            width: 130px;
+            height: 180px;
             z-index: 20; 
             display: none;
             transition: transform 0.3s;
@@ -121,30 +128,19 @@
             cursor: grab;
             animation: pulse-ready 1s infinite;
             filter: drop-shadow(0 0 10px gold);
-            z-index: 200 !important; /* Acima de tudo para entregar */
+            z-index: 200 !important;
         }
         .blender-ready:active { cursor: grabbing; animation: none; }
 
-        #blender-sensor {
-            position: absolute; top: 0; left: 10; width: 120px; height: 150px; z-index: 10;
-        }
-
-        .blender-active #monster-container {
-            left: 30%; /* Move monstro para esquerda */
-        }
-        
+        #blender-sensor { position: absolute; top: 0; left: 10; width: 120px; height: 150px; z-index: 10; }
+        .blender-active #monster-container { left: 25%; }
         .blender-shaking { animation: shake 0.5s infinite; }
         
         /* --- ANIMAÇÃO DO COCÔ --- */
         .poop-drop {
-            position: absolute;
-            font-size: 80px;
-            z-index: 5; /* Atrás do monstro */
-            animation: dropPoop 2s forwards;
-            left: 50%;
-            top: 55%;
+            position: absolute; font-size: 80px; z-index: 5;
+            animation: dropPoop 2s forwards; left: 50%; top: 55%;
         }
-
         @keyframes dropPoop {
             0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; }
             20% { opacity: 1; transform: translate(-50%, 20px) scale(1); }
@@ -153,25 +149,13 @@
 
         /* --- CONTROLES LATERAIS --- */
         #controls-sidebar {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            z-index: 50;
+            position: absolute; right: 10px; top: 40%;
+            transform: translateY(-50%); display: flex; flex-direction: column; gap: 15px; z-index: 50;
         }
-
         .control-btn {
-            width: 60px; height: 60px;
-            background: white;
-            border-radius: 50%;
-            border: 4px solid #3498db;
-            cursor: pointer;
-            display: flex; justify-content: center; align-items: center;
-            box-shadow: 0 4px 0 #2980b9;
-            transition: transform 0.1s;
+            width: 60px; height: 60px; background: white; border-radius: 50%;
+            border: 4px solid #3498db; cursor: pointer; display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 4px 0 #2980b9; transition: transform 0.1s;
         }
         .control-btn:active { transform: translateY(4px); box-shadow: none; }
         .control-btn svg { width: 35px; height: 35px; fill: #333; }
@@ -180,46 +164,26 @@
 
         /* Botão de Cocô */
         #poop-btn {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            width: 80px; height: 80px;
-            background: #fff;
-            border-radius: 50%;
-            border: 4px solid #e74c3c;
-            display: none;
-            justify-content: center; align-items: center;
-            z-index: 60;
-            animation: pulse 1s infinite;
-            cursor: pointer;
+            position: absolute; bottom: 140px; left: 20px; /* Acima da cesta */
+            width: 80px; height: 80px; background: #fff; border-radius: 50%;
+            border: 4px solid #e74c3c; display: none; justify-content: center; align-items: center;
+            z-index: 60; animation: pulse 1s infinite; cursor: pointer;
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
 
         /* --- UI E TEXTOS --- */
-        #ui-layer {
-            position: absolute; top: 10px; width: 100%; text-align: center; z-index: 20; pointer-events: none;
-        }
-
+        #ui-layer { position: absolute; top: 10px; width: 100%; text-align: center; z-index: 20; pointer-events: none; }
         #instruction-bubble {
-            background: white; padding: 15px 25px; border-radius: 30px; display: inline-block;
-            border: 3px solid #333; font-size: 1.5rem; box-shadow: 5px 5px 0 rgba(0,0,0,0.1); max-width: 80%;
+            background: white; padding: 10px 20px; border-radius: 30px; display: inline-block;
+            border: 3px solid #333; font-size: 1.5rem; box-shadow: 5px 5px 0 rgba(0,0,0,0.1); max-width: 90%;
         }
-
         .highlight-num { color: #e74c3c; font-weight: bold; font-size: 1.8rem; }
 
-        /* --- FRUTAS --- */
-        .fruit {
-            width: 70px; height: 70px; position: absolute; cursor: grab; z-index: 30;
-            filter: drop-shadow(2px 4px 3px rgba(0,0,0,0.2)); transition: transform 0.1s;
-            touch-action: none;
-        }
-        .fruit:active { cursor: grabbing; transform: scale(1.1); z-index: 1000 !important; }
-
-        /* --- TELAS --- */
+        /* --- TELA INICIAL --- */
         #start-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(46, 204, 113, 0.95);
-            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100;
+            background: rgba(46, 204, 113, 0.95); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 100;
         }
         .big-btn {
             background: #fff; color: #2ecc71; border: none; padding: 20px 60px;
@@ -228,13 +192,17 @@
         }
         .big-btn:active { transform: translateY(8px); box-shadow: none; }
 
-        /* --- ANIMAÇÕES --- */
-        @keyframes shake {
-            0% { transform: translate(1px, 1px) rotate(0deg); }
-            10% { transform: translate(-1px, -2px) rotate(-1deg); }
-            50% { transform: translate(-1px, 2px) rotate(-1deg); }
-            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        /* --- MEDIA QUERIES --- */
+        @media (max-width: 768px) {
+            #monster-container { width: 250px; height: 300px; }
+            #mouth-sensor { top: 110px; left: 60px; width: 130px; }
+            #belly-container { top: 180px; left: 75px; width: 100px; }
+            #instruction-bubble { font-size: 1.1rem; }
+            #fruit-basket { height: 100px; }
+            .basket-item { width: 60px; height: 60px; }
         }
+
+        @keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-1deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 100% { transform: translate(1px, -2px) rotate(-1deg); } }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
         @keyframes pulse-ready { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
         @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
@@ -247,7 +215,7 @@
 
     <!-- TELA INICIAL -->
     <div id="start-screen">
-        <h1 style="color:white; font-size: 3rem; text-shadow: 2px 2px 0 #000; text-align:center;">Monstro Comilão</h1>
+        <h1 style="color:white; font-size: 2.5rem; text-shadow: 2px 2px 0 #000; text-align:center;">Monstro Comilão</h1>
         <button class="big-btn" onclick="startGame()">JOGAR</button>
         <p style="color:white; margin-top:20px;">Para a Lavine ❤️</p>
     </div>
@@ -276,31 +244,23 @@
         <!-- O MONSTRO -->
         <div id="monster-container">
             <div id="mouth-sensor"></div>
-            
-            <!-- BARRIGA (VISUAL) -->
             <div id="belly-container">
                 <div id="eaten-fruits-visuals"></div>
                 <div id="belly-counter"></div>
             </div>
-
             <svg id="monster-svg" viewBox="0 0 300 350" xmlns="http://www.w3.org/2000/svg">
-                <!-- Corpo -->
                 <path id="monster-body" d="M50 300 Q20 350 80 340 L220 340 Q280 350 250 300 Q280 200 250 100 Q230 20 150 20 Q70 20 50 100 Q20 200 50 300" fill="#7bed9f" stroke="#2ecc71" stroke-width="5"/>
-                <!-- Barriga (Círculo Transparente) -->
                 <circle cx="150" cy="250" r="60" fill="rgba(255,255,255,0.5)" stroke="#fff" stroke-width="3" />
-                <!-- Olhos -->
                 <g id="eyes">
                     <circle cx="100" cy="100" r="25" fill="white" stroke="#333" stroke-width="2"/>
                     <circle cx="200" cy="100" r="25" fill="white" stroke="#333" stroke-width="2"/>
                     <circle class="eye-pupil" id="eye-left" cx="100" cy="100" r="10" fill="black" />
                     <circle class="eye-pupil" id="eye-right" cx="200" cy="100" r="10" fill="black" />
                 </g>
-                <!-- Boca -->
                 <g id="mouth-group">
                     <path class="mouth-path" d="M75 130 Q150 130 225 130 Q225 180 150 180 Q75 180 75 130 Z" fill="#333" />
                     <path class="teeth" d="M85 130 L95 145 L105 130 M195 130 L205 145 L215 130" stroke="white" stroke-width="3" fill="white"/>
                 </g>
-                <!-- Braços -->
                 <path id="monster-arms-left" d="M60 200 Q20 220 30 180" stroke="#2ecc71" stroke-width="15" stroke-linecap="round" fill="none"/>
                 <path id="monster-arms-right" d="M240 200 Q280 220 270 180" stroke="#2ecc71" stroke-width="15" stroke-linecap="round" fill="none"/>
             </svg>
@@ -310,21 +270,22 @@
         <div id="blender-container">
             <div id="blender-sensor"></div>
             <svg viewBox="0 0 140 200">
-                <!-- Copo -->
                 <path d="M20 40 L30 160 Q35 180 70 180 Q105 180 110 160 L120 40 Z" fill="rgba(200, 230, 255, 0.6)" stroke="#3498db" stroke-width="3"/>
-                <!-- Tampa -->
                 <rect x="15" y="30" width="110" height="15" rx="5" fill="#333"/>
-                <!-- Base -->
                 <rect x="25" y="180" width="90" height="20" fill="#e74c3c"/>
-                <!-- Conteúdo (Líquido) -->
                 <path id="blender-liquid" d="M25 160 Q35 175 70 175 Q105 175 115 160 L118 100 Q70 110 22 100 Z" fill="#e67e22" opacity="0" style="transition: opacity 1s ease;"/>
             </svg>
         </div>
+
+        <!-- CESTA DE FRUTAS -->
+        <div id="fruit-basket">
+            <!-- As frutas serão injetadas aqui pelo JS -->
+        </div>
+
     </div>
 
     <!-- SCRIPT DO JOGO -->
     <script>
-        // --- DADOS DAS FRUTAS (SVGs INLINE) ---
         const fruitsData = {
             'morango': { color: '#e74c3c', shape: '<path d="M35 10 Q55 10 60 25 Q65 60 35 70 Q5 60 10 25 Q15 10 35 10 Z" fill="#e74c3c" stroke="#c0392b"/><path d="M35 10 L30 5 M35 10 L40 5 M35 10 L35 2" stroke="green" stroke-width="3"/>' },
             'banana': { color: '#f1c40f', shape: '<path d="M10 50 Q35 70 60 20 Q65 15 60 15 Q40 60 10 40 Z" fill="#f1c40f" stroke="#f39c12" stroke-width="2"/>' },
@@ -338,31 +299,23 @@
         };
 
         const monsterColors = [
-            { fill: '#7bed9f', stroke: '#2ecc71' }, // Verde
-            { fill: '#ff7675', stroke: '#d63031' }, // Rosa
-            { fill: '#74b9ff', stroke: '#0984e3' }, // Azul
-            { fill: '#a29bfe', stroke: '#6c5ce7' }, // Roxo
-            { fill: '#ffeaa7', stroke: '#fdcb6e' }  // Amarelo
+            { fill: '#7bed9f', stroke: '#2ecc71' }, 
+            { fill: '#ff7675', stroke: '#d63031' },
+            { fill: '#74b9ff', stroke: '#0984e3' }, 
+            { fill: '#a29bfe', stroke: '#6c5ce7' }, 
+            { fill: '#ffeaa7', stroke: '#fdcb6e' } 
         ];
         let colorIndex = 0;
 
-        // --- ESTADO ---
         let state = {
             mode: 'normal',
-            targetCount: 0,
-            eatenCount: 0,
-            targetType: '',
-            blenderRecipe: {},
-            blenderContent: [],
-            blenderReady: false, 
-            poopMeter: 0,
-            isPlaying: false,
-            needsPoop: false
+            targetCount: 0, eatenCount: 0, targetType: '',
+            blenderRecipe: {}, blenderContent: [], blenderReady: false, 
+            poopMeter: 0, isPlaying: false, needsPoop: false,
+            activeDrag: null // Armazena a fruta que está sendo arrastada
         };
 
         const MAX_POOP = 6;
-
-        // DOM Elements
         const els = {
             instruction: document.getElementById('instruction-bubble'),
             monster: document.getElementById('monster-container'),
@@ -378,17 +331,15 @@
             poopBtn: document.getElementById('poop-btn'),
             gameContainer: document.getElementById('game-container'),
             btnBlender: document.getElementById('btn-blender'),
-            uiLayer: document.getElementById('ui-layer')
+            basket: document.getElementById('fruit-basket')
         };
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-        // --- ÁUDIO ---
         function speak(text) {
             window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'pt-BR';
-            utterance.rate = 1.1; 
+            utterance.lang = 'pt-BR'; utterance.rate = 1.1; 
             const voices = window.speechSynthesis.getVoices();
             const preferredVoice = voices.find(v => v.name.includes('Google Português') || v.name.includes('Luciana'));
             if(preferredVoice) utterance.voice = preferredVoice;
@@ -399,46 +350,36 @@
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const osc = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
-            osc.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
+            osc.connect(gainNode); gainNode.connect(audioCtx.destination);
             const now = audioCtx.currentTime;
 
             if (type === 'pop') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(800, now);
+                osc.type = 'sine'; osc.frequency.setValueAtTime(800, now);
                 gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
                 osc.start(); osc.stop(now + 0.1);
             } else if (type === 'eat') {
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(300, now);
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(300, now);
                 osc.frequency.linearRampToValueAtTime(100, now + 0.1);
                 gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
                 osc.start(); osc.stop(now + 0.15);
             } else if (type === 'blender') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(100, now);
+                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, now);
                 osc.frequency.linearRampToValueAtTime(150, now + 1.5);
-                gainNode.gain.setValueAtTime(0.2, now);
-                gainNode.gain.linearRampToValueAtTime(0, now + 1.5);
+                gainNode.gain.setValueAtTime(0.2, now); gainNode.gain.linearRampToValueAtTime(0, now + 1.5);
                 osc.start(); osc.stop(now + 1.5);
             } else if (type === 'glub') { 
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(400, now);
+                osc.type = 'sine'; osc.frequency.setValueAtTime(400, now);
                 osc.frequency.linearRampToValueAtTime(200, now + 0.2);
-                gainNode.gain.setValueAtTime(0.3, now);
-                gainNode.gain.linearRampToValueAtTime(0, now + 0.2);
+                gainNode.gain.setValueAtTime(0.3, now); gainNode.gain.linearRampToValueAtTime(0, now + 0.2);
                 osc.start(); osc.stop(now + 0.3);
             } else if (type === 'fart') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(150, now);
+                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, now);
                 osc.frequency.exponentialRampToValueAtTime(50, now + 0.4);
-                gainNode.gain.setValueAtTime(0.5, now);
-                gainNode.gain.linearRampToValueAtTime(0, now + 0.4);
+                gainNode.gain.setValueAtTime(0.5, now); gainNode.gain.linearRampToValueAtTime(0, now + 0.4);
                 osc.start(); osc.stop(now + 0.4);
             }
         }
 
-        // --- CONTROLES GERAIS ---
         function toggleColor() {
             if (state.needsPoop) { speak("Agora não, estou passando mal!"); return; }
             colorIndex = (colorIndex + 1) % monsterColors.length;
@@ -457,7 +398,6 @@
             startRound();
         }
 
-        // --- SISTEMA DE COCÔ ---
         function checkPoopStatus() {
             if (state.poopMeter >= MAX_POOP) {
                 state.needsPoop = true;
@@ -465,7 +405,8 @@
                 els.instruction.innerHTML = "Ai minha barriga! Preciso fazer cocô!";
                 speak("Ai ai ai, minha barriga! Preciso fazer cocô!");
                 els.poopBtn.style.display = 'flex';
-                document.querySelectorAll('.fruit').forEach(el => el.remove());
+                els.basket.style.opacity = '0.5'; // Desabilita cesta visualmente
+                els.basket.style.pointerEvents = 'none';
                 return true;
             }
             return false;
@@ -482,10 +423,12 @@
             els.gameContainer.appendChild(poopVisual);
             setTimeout(() => poopVisual.remove(), 2000);
 
-            state.poopMeter = 0;
-            state.needsPoop = false;
+            state.poopMeter = 0; state.needsPoop = false;
             els.poopBtn.style.display = 'none';
             els.monster.classList.remove('sick-face');
+            els.basket.style.opacity = '1';
+            els.basket.style.pointerEvents = 'auto';
+            
             const theme = monsterColors[colorIndex];
             els.monsterBody.setAttribute('fill', theme.fill);
             speak("Ufa! Que alívio! Agora estou com fome de novo.");
@@ -498,7 +441,6 @@
             if (state.needsPoop) return;
             state.mode = (state.mode === 'normal') ? 'blender' : 'normal';
             if (state.mode === 'blender') {
-                document.querySelectorAll('.fruit').forEach(el => el.remove()); 
                 els.blender.style.display = 'block';
                 document.body.classList.add('blender-active');
                 els.btnBlender.classList.add('btn-active');
@@ -519,88 +461,123 @@
             state.blenderReady = false;
             els.blender.classList.remove('blender-ready');
             
-            document.querySelectorAll('.fruit').forEach(el => el.remove());
+            // Limpa cesta
+            els.basket.innerHTML = '';
 
             if (state.mode === 'normal') setupNormalRound();
             else setupBlenderRound();
             moveEyes();
         }
 
-        // --- GERAÇÃO DE GRADE PARA EVITAR SOBREPOSIÇÃO (NOVO) ---
-        function generateGridPositions() {
-            const positions = [];
-            const fruitSize = 75; // Tamanho fruta + margem
-            const cols = Math.floor(window.innerWidth / fruitSize);
-            const rows = Math.floor(window.innerHeight / fruitSize);
-
-            // Zonas Proibidas (Rects: x, y, width, height)
-            // Monstro (Centro)
-            const monsterRect = { 
-                x: window.innerWidth / 2 - 170, 
-                y: window.innerHeight / 2 - 200, 
-                w: 340, 
-                h: 400 
-            };
-            
-            // Texto (Topo)
-            const textRect = { x: 0, y: 0, w: window.innerWidth, h: 120 };
-            
-            // Botão Poop (Esquerda Inferior)
-            const poopRect = { x: 0, y: window.innerHeight - 120, w: 120, h: 120 };
-
-            // Sidebar (Direita Meio)
-            const sideRect = { x: window.innerWidth - 80, y: window.innerHeight/2 - 100, w: 80, h: 200 };
-
-            // Liquidificador (Direita Inferior - se ativo)
-            const blenderRect = (state.mode === 'blender') 
-                ? { x: window.innerWidth - 200, y: window.innerHeight - 250, w: 200, h: 250 } 
-                : { x: 0, y: 0, w: 0, h: 0 };
-
-            // Gera slots na grade
-            for(let c = 0; c < cols; c++) {
-                for(let r = 0; r < rows; r++) {
-                    const x = c * fruitSize + 10; // offset
-                    const y = r * fruitSize + 10;
-
-                    // Checa colisões
-                    const inMonster = (x + fruitSize > monsterRect.x && x < monsterRect.x + monsterRect.w) &&
-                                      (y + fruitSize > monsterRect.y && y < monsterRect.y + monsterRect.h);
-                    
-                    const inText = (y < textRect.h);
-                    const inPoop = (x < poopRect.w && y > poopRect.y);
-                    const inSide = (x > sideRect.x && y > sideRect.y && y < sideRect.y + sideRect.h);
-                    const inBlender = (x > blenderRect.x && y > blenderRect.y);
-
-                    if (!inMonster && !inText && !inPoop && !inSide && !inBlender) {
-                        positions.push({x, y});
-                    }
-                }
-            }
-
-            // Embaralha as posições
-            return positions.sort(() => Math.random() - 0.5);
-        }
-
-        function spawnFruitsIntelligent(requiredFruits) {
-            let fruitsToSpawn = [...requiredFruits];
+        // --- PREENCHIMENTO DA CESTA ---
+        function fillBasket(requiredTypes) {
+            // Garante que o que precisa está na cesta + algumas outras aleatórias
+            let options = [...requiredTypes];
             const allTypes = Object.keys(fruitsData);
             
-            // Completa até 10-12 frutas
-            while(fruitsToSpawn.length < 12) {
+            // Adiciona frutas aleatórias para completar 4 ou 5 opções na cesta
+            while(options.length < 5) {
                 const randomType = allTypes[Math.floor(Math.random() * allTypes.length)];
-                fruitsToSpawn.push(randomType);
+                if(!options.includes(randomType)) options.push(randomType);
             }
-            fruitsToSpawn.sort(() => Math.random() - 0.5);
-
-            // Pega slots livres
-            const slots = generateGridPositions();
             
-            // Cria frutas nos slots
-            fruitsToSpawn.forEach((type, index) => {
-                if (index < slots.length) {
-                    createFruit(type, slots[index]);
-                }
+            // Embaralha ordem
+            options.sort(() => Math.random() - 0.5);
+
+            // Cria elementos na cesta
+            options.forEach(type => {
+                const item = document.createElement('div');
+                item.className = 'basket-item';
+                item.innerHTML = `<svg viewBox="0 0 70 70" style="pointer-events:none;">${fruitsData[type].shape}</svg>`;
+                item.dataset.type = type;
+                
+                // Evento para clonar e arrastar
+                item.addEventListener('touchstart', handleBasketTouchStart, {passive: false});
+                item.addEventListener('mousedown', handleBasketTouchStart);
+                
+                els.basket.appendChild(item);
             });
+        }
+
+        // --- SISTEMA DE CLONAGEM E ARRASTO (INFINITO) ---
+        function handleBasketTouchStart(e) {
+            if (!state.isPlaying || state.needsPoop) return;
+            e.preventDefault();
+
+            const type = e.currentTarget.dataset.type;
+            const touch = e.type === 'touchstart' ? e.touches[0] : e;
+
+            // Cria o clone que será arrastado
+            const dragEl = document.createElement('div');
+            dragEl.className = 'fruit-drag';
+            dragEl.dataset.type = type;
+            dragEl.innerHTML = `<svg viewBox="0 0 70 70">${fruitsData[type].shape}</svg>`;
+            
+            // Posiciona exatamente onde o dedo está
+            dragEl.style.left = (touch.clientX - 40) + 'px'; // Centraliza (80px/2)
+            dragEl.style.top = (touch.clientY - 40) + 'px';
+            
+            els.gameContainer.appendChild(dragEl);
+            state.activeDrag = dragEl;
+
+            // Inicia listeners globais de movimento
+            const moveHandler = (me) => {
+                if(!state.activeDrag) return;
+                const mt = me.type === 'touchmove' ? me.touches[0] : me;
+                state.activeDrag.style.left = (mt.clientX - 40) + 'px';
+                state.activeDrag.style.top = (mt.clientY - 40) + 'px';
+            };
+
+            const endHandler = (me) => {
+                document.removeEventListener('mousemove', moveHandler);
+                document.removeEventListener('mouseup', endHandler);
+                document.removeEventListener('touchmove', moveHandler);
+                document.removeEventListener('touchend', endHandler);
+                
+                if (state.activeDrag) {
+                    checkDrop(state.activeDrag);
+                    state.activeDrag = null;
+                }
+            };
+
+            document.addEventListener('mousemove', moveHandler);
+            document.addEventListener('mouseup', endHandler);
+            document.addEventListener('touchmove', moveHandler, {passive: false});
+            document.addEventListener('touchend', endHandler);
+        }
+
+        function checkDrop(el) {
+            const rect = el.getBoundingClientRect();
+            const cx = rect.left + rect.width/2;
+            const cy = rect.top + rect.height/2;
+
+            let dropped = false;
+
+            if (state.mode === 'normal') {
+                const mouth = els.mouthSensor.getBoundingClientRect();
+                if (cx >= mouth.left && cx <= mouth.right && cy >= mouth.top && cy <= mouth.bottom) {
+                    if (el.dataset.type === state.targetType) {
+                        eatFruitNormal(el);
+                        dropped = true;
+                    } else {
+                        speak("Essa não!"); playSound('pop');
+                    }
+                }
+            } else {
+                const blender = els.blenderSensor.getBoundingClientRect();
+                if (cx >= blender.left && cx <= blender.right && cy >= blender.top && cy <= blender.bottom) {
+                    checkBlenderIngredient(el);
+                    dropped = true;
+                }
+            }
+
+            // Se não foi solta no lugar certo, ela some (puff)
+            if (!dropped) {
+                el.style.transition = 'transform 0.2s, opacity 0.2s';
+                el.style.transform = 'scale(0)';
+                el.style.opacity = '0';
+                setTimeout(() => el.remove(), 200);
+            }
         }
 
         // --- MODO NORMAL ---
@@ -616,17 +593,18 @@
             els.instruction.innerHTML = `Quero <span class="highlight-num">${state.targetCount}</span> ${capitalize(state.targetType)}${plural}!`;
             speak(`Eu quero ${state.targetCount} ${state.targetType}${plural}`);
             
-            let required = [];
-            for(let i=0; i<state.targetCount; i++) required.push(state.targetType);
-            
-            spawnFruitsIntelligent(required);
+            fillBasket([state.targetType]);
         }
 
         function eatFruitNormal(el) {
-            const clone = el.cloneNode(true);
-            el.remove();
-            clone.className = 'eaten-fruit';
-            els.eatenFruits.appendChild(clone);
+            // Cria um clone visual pequeno para a barriga antes de remover o drag
+            const bellyClone = el.cloneNode(true);
+            bellyClone.className = 'eaten-fruit';
+            bellyClone.style.left = 'auto'; bellyClone.style.top = 'auto'; // Remove posição fixa
+            els.eatenFruits.appendChild(bellyClone);
+            
+            el.remove(); // Remove a fruta arrastada grandona
+            
             playSound('eat');
             state.targetCount--;
             state.eatenCount++;
@@ -660,11 +638,7 @@
             els.instruction.innerHTML = `Vitamina: <span class="highlight-num">${txt1}</span> e <span class="highlight-num">${txt2}</span>`;
             speak(`Vamos fazer vitamina de ${type1} com ${type2}.`);
             
-            let required = [];
-            for(let i=0; i<count1; i++) required.push(type1);
-            for(let i=0; i<count2; i++) required.push(type2);
-            
-            spawnFruitsIntelligent(required);
+            fillBasket([type1, type2]);
         }
 
         function checkBlenderIngredient(el) {
@@ -685,6 +659,7 @@
             } else {
                 speak("Essa não!");
                 playSound('pop');
+                el.remove();
             }
         }
 
@@ -707,7 +682,7 @@
                 els.blender.classList.add('blender-ready');
                 els.instruction.innerHTML = "Agora dê para o monstro!";
                 speak("Pronto! Agora arraste o liquidificador até a minha boca!");
-                document.querySelectorAll('.fruit').forEach(el => el.remove());
+                els.basket.innerHTML = ''; // Limpa cesta
             }, 1500);
         }
 
@@ -720,11 +695,9 @@
                 if (!state.blenderReady) return; 
                 e.preventDefault(); 
                 const touch = e.type === 'touchstart' ? e.touches[0] : e;
-                startX = touch.clientX;
-                startY = touch.clientY;
-                
+                startX = touch.clientX; startY = touch.clientY;
                 el.style.transition = 'none';
-                el.style.zIndex = 1000; // Topo máximo
+                el.style.zIndex = 1000;
 
                 function onMove(me) {
                     const mt = me.type === 'touchmove' ? me.touches[0] : me;
@@ -779,7 +752,6 @@
             state.blenderReady = false;
             els.blender.classList.remove('blender-ready');
             els.monster.classList.remove('mouth-open');
-            
             els.blender.style.transition = 'transform 0.5s';
             els.blender.style.transform = 'translate(-80px, -200px) rotate(-100deg)';
             
@@ -805,72 +777,6 @@
             els.blender.style.zIndex = 20;
         }
 
-        // --- CRIAÇÃO DE FRUTAS ---
-        function createFruit(type, pos) {
-            const el = document.createElement('div');
-            el.className = 'fruit';
-            el.dataset.type = type;
-            el.innerHTML = `<svg viewBox="0 0 70 70">${fruitsData[type].shape}</svg>`;
-            
-            // Usa o sistema de grade (Grid)
-            el.style.left = pos.x + 'px'; 
-            el.style.top = pos.y + 'px';
-            
-            el.style.animation = 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-            setupFruitDrag(el);
-            els.gameContainer.appendChild(el);
-        }
-
-        function setupFruitDrag(el) {
-            let startX, startY, initialLeft, initialTop;
-            function onStart(e) {
-                if (!state.isPlaying) return;
-                e.preventDefault();
-                const touch = e.type === 'touchstart' ? e.touches[0] : e;
-                startX = touch.clientX; startY = touch.clientY;
-                initialLeft = el.offsetLeft; initialTop = el.offsetTop;
-                el.style.zIndex = 1000;
-                function onMove(me) {
-                    const mt = me.type === 'touchmove' ? me.touches[0] : me;
-                    el.style.left = (initialLeft + (mt.clientX - startX)) + 'px';
-                    el.style.top = (initialTop + (mt.clientY - startY)) + 'px';
-                }
-                function onEnd() {
-                    document.removeEventListener('mousemove', onMove);
-                    document.removeEventListener('mouseup', onEnd);
-                    document.removeEventListener('touchmove', onMove);
-                    document.removeEventListener('touchend', onEnd);
-                    el.style.zIndex = 30;
-                    checkDrop(el);
-                }
-                document.addEventListener('mousemove', onMove);
-                document.addEventListener('mouseup', onEnd);
-                document.addEventListener('touchmove', onMove, {passive: false});
-                document.addEventListener('touchend', onEnd);
-            }
-            el.addEventListener('mousedown', onStart);
-            el.addEventListener('touchstart', onStart, {passive: false});
-        }
-
-        function checkDrop(el) {
-            const rect = el.getBoundingClientRect();
-            const cx = rect.left + rect.width/2;
-            const cy = rect.top + rect.height/2;
-            if (state.mode === 'normal') {
-                const mouth = els.mouthSensor.getBoundingClientRect();
-                if (cx >= mouth.left && cx <= mouth.right && cy >= mouth.top && cy <= mouth.bottom) {
-                    if (el.dataset.type === state.targetType) eatFruitNormal(el);
-                    else { speak("Essa não!"); playSound('pop'); }
-                }
-            } else {
-                const blender = els.blenderSensor.getBoundingClientRect();
-                if (cx >= blender.left && cx <= blender.right && cy >= blender.top && cy <= blender.bottom) {
-                    checkBlenderIngredient(el);
-                }
-            }
-        }
-
-        // --- UTILITÁRIOS ---
         function moveEyes() {
             const left = document.getElementById('eye-left');
             const right = document.getElementById('eye-right');
