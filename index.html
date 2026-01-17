@@ -47,8 +47,53 @@
             z-index: 10;
         }
 
+        /* --- BARRIGA (VISUAL) --- */
+        #belly-container {
+            position: absolute;
+            top: 200px; /* Ajustado para ficar em cima do círculo da barriga */
+            left: 90px;
+            width: 120px;
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 6;
+            pointer-events: none;
+        }
+
+        #belly-counter {
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 2px 2px 0 #000;
+            z-index: 8;
+            position: absolute;
+        }
+
+        #eaten-fruits-visuals {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            opacity: 0.6;
+            z-index: 7;
+        }
+
+        .eaten-fruit {
+            width: 25px !important;
+            height: 25px !important;
+            margin: 2px;
+            position: relative !important;
+            transform: none !important;
+            left: auto !important;
+            top: auto !important;
+        }
+
         /* Expressão de enjoo (Hora do cocô) */
-        .sick-face #monster-body { fill: #a8d5ba !important; } /* Pele meio verde */
+        .sick-face #monster-body { fill: #a8d5ba !important; transition: fill 0.5s; }
         .sick-face .eye-pupil { transform: scale(0.5); }
         .sick-face .mouth-path { d: path("M75 150 Q110 140 150 150 Q190 160 225 150"); fill: none; stroke: #333; stroke-width: 5; }
         .sick-face .teeth { display: none; }
@@ -110,6 +155,12 @@
         .control-btn:active { transform: translateY(4px); box-shadow: none; }
         .control-btn svg { width: 35px; height: 35px; fill: #333; }
         .btn-active { background: #ffeaa7; border-color: #f1c40f; box-shadow: 0 4px 0 #d35400; }
+
+        /* Botão de Cor (Novo) */
+        #btn-color {
+            border-color: #9b59b6;
+            box-shadow: 0 4px 0 #8e44ad;
+        }
 
         /* Botão de Cocô (Aparece só quando precisa) */
         #poop-btn {
@@ -198,6 +249,8 @@
         }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
         @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
+        @keyframes numberPop { 0% { transform: scale(1); } 50% { transform: scale(1.5); } 100% { transform: scale(1); } }
+        .number-pop { animation: numberPop 0.3s ease-out; }
 
     </style>
 </head>
@@ -218,6 +271,12 @@
                 <path d="M19,19H5V8H19M19,8V6A2,2 0 0,0 17,4H7A2,2 0 0,0 5,6V8M19,19A2,2 0 0,1 17,21H7A2,2 0 0,1 5,19M9,13H15" fill="#333"/>
             </svg>
         </div>
+        <!-- Botão Cor (Pincel) -->
+        <div id="btn-color" class="control-btn" onclick="toggleColor()" title="Mudar Cor">
+            <svg viewBox="0 0 24 24">
+                <path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z" fill="#333" />
+            </svg>
+        </div>
     </div>
 
     <!-- BOTÃO DE COCÔ (ESCONDIDO) -->
@@ -235,12 +294,19 @@
         <!-- O MONSTRO -->
         <div id="monster-container">
             <div id="mouth-sensor"></div>
+            
+            <!-- BARRIGA (VISUAL RESTAURADO) -->
+            <div id="belly-container">
+                <div id="eaten-fruits-visuals"></div>
+                <div id="belly-counter"></div>
+            </div>
+
             <svg id="monster-svg" viewBox="0 0 300 350" xmlns="http://www.w3.org/2000/svg">
                 <!-- Corpo -->
                 <path id="monster-body" d="M50 300 Q20 350 80 340 L220 340 Q280 350 250 300 Q280 200 250 100 Q230 20 150 20 Q70 20 50 100 Q20 200 50 300" fill="#7bed9f" stroke="#2ecc71" stroke-width="5"/>
                 
-                <!-- Barriga -->
-                <circle cx="150" cy="250" r="60" fill="rgba(255,255,255,0.4)" stroke="#fff" stroke-width="3" />
+                <!-- Barriga (Círculo Transparente) -->
+                <circle cx="150" cy="250" r="60" fill="rgba(255,255,255,0.5)" stroke="#fff" stroke-width="3" />
                 
                 <!-- Olhos -->
                 <g id="eyes">
@@ -257,8 +323,8 @@
                 </g>
 
                 <!-- Braços -->
-                <path d="M60 200 Q20 220 30 180" stroke="#2ecc71" stroke-width="15" stroke-linecap="round" fill="none"/>
-                <path d="M240 200 Q280 220 270 180" stroke="#2ecc71" stroke-width="15" stroke-linecap="round" fill="none"/>
+                <path id="monster-arms-left" d="M60 200 Q20 220 30 180" stroke="#2ecc71" stroke-width="15" stroke-linecap="round" fill="none"/>
+                <path id="monster-arms-right" d="M240 200 Q280 220 270 180" stroke="#2ecc71" stroke-width="15" stroke-linecap="round" fill="none"/>
             </svg>
         </div>
 
@@ -294,10 +360,21 @@
             'limão': { color: '#6ab04c', shape: '<ellipse cx="35" cy="35" rx="25" ry="20" fill="#badc58" stroke="#6ab04c"/>' }
         };
 
+        // --- CORES DO MONSTRO ---
+        const monsterColors = [
+            { fill: '#7bed9f', stroke: '#2ecc71' }, // Verde (Padrão)
+            { fill: '#ff7675', stroke: '#d63031' }, // Rosa/Vermelho
+            { fill: '#74b9ff', stroke: '#0984e3' }, // Azul
+            { fill: '#a29bfe', stroke: '#6c5ce7' }, // Roxo
+            { fill: '#ffeaa7', stroke: '#fdcb6e' }  // Amarelo/Laranja
+        ];
+        let colorIndex = 0;
+
         // --- ESTADO DO JOGO ---
         let state = {
             mode: 'normal', // 'normal' ou 'blender'
             targetCount: 0, // Frutas restantes para pedir
+            eatenCount: 0, // Quantas comeu na rodada (para o visual)
             targetType: '', // Tipo atual no modo normal
             blenderRecipe: {}, // Ex: { banana: 2, morango: 1 } no modo vitamina
             blenderContent: [], // O que já foi colocado
@@ -306,12 +383,17 @@
             needsPoop: false
         };
 
-        const MAX_POOP = 6; // Quantidade de frutas/vitaminas até dar vontade de ir ao banheiro
+        const MAX_POOP = 6;
 
         // Elementos DOM
         const els = {
             instruction: document.getElementById('instruction-bubble'),
             monster: document.getElementById('monster-container'),
+            monsterBody: document.getElementById('monster-body'),
+            monsterArmsLeft: document.getElementById('monster-arms-left'),
+            monsterArmsRight: document.getElementById('monster-arms-right'),
+            bellyCounter: document.getElementById('belly-counter'),
+            eatenFruits: document.getElementById('eaten-fruits-visuals'),
             blender: document.getElementById('blender-container'),
             blenderSensor: document.getElementById('blender-sensor'),
             blenderLiquid: document.getElementById('blender-liquid'),
@@ -332,7 +414,6 @@
             utterance.rate = 1.1; 
             
             const voices = window.speechSynthesis.getVoices();
-            // Tenta pegar a voz da Luciana ou Google
             const preferredVoice = voices.find(v => v.name.includes('Google Português') || v.name.includes('Luciana'));
             if(preferredVoice) utterance.voice = preferredVoice;
 
@@ -374,7 +455,6 @@
                 gainNode.gain.linearRampToValueAtTime(0, now + 0.4);
                 osc.start(); osc.stop(now + 0.4);
             } else if (type === 'flush') {
-                // Som de descarga (ruído branco simulado)
                 const bufferSize = audioCtx.sampleRate * 1;
                 const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
                 const data = buffer.getChannelData(0);
@@ -385,10 +465,27 @@
                 const noiseGain = audioCtx.createGain();
                 noiseGain.gain.setValueAtTime(0.5, now);
                 noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 1);
-                
                 noise.connect(noiseGain);
                 noiseGain.connect(audioCtx.destination);
                 noise.start();
+            }
+        }
+
+        // --- CONTROLE DE COR ---
+        function toggleColor() {
+            colorIndex = (colorIndex + 1) % monsterColors.length;
+            const theme = monsterColors[colorIndex];
+            
+            // Só muda a cor se não estiver com cara de enjoo
+            if (!state.needsPoop) {
+                els.monsterBody.setAttribute('fill', theme.fill);
+                els.monsterBody.setAttribute('stroke', theme.stroke);
+                els.monsterArmsLeft.setAttribute('stroke', theme.stroke);
+                els.monsterArmsRight.setAttribute('stroke', theme.stroke);
+                
+                playSound('pop');
+            } else {
+                speak("Agora não, estou passando mal!");
             }
         }
 
@@ -400,16 +497,17 @@
         }
 
         function toggleBlenderMode() {
-            if (state.needsPoop) return; // Não troca se precisar fazer cocô
+            if (state.needsPoop) return;
 
             state.mode = (state.mode === 'normal') ? 'blender' : 'normal';
             
             if (state.mode === 'blender') {
-                els.monster.classList.add('sick-face'); // Reusa a classe sick-face momentaneamente ou cria outra se quiser
                 els.blender.style.display = 'block';
                 document.body.classList.add('blender-active');
                 els.btnBlender.classList.add('btn-active');
-                els.monster.classList.remove('sick-face'); // Remove logo, foi só teste
+                // Limpa visuais da barriga
+                els.bellyCounter.innerText = '';
+                els.eatenFruits.innerHTML = '';
             } else {
                 els.blender.style.display = 'none';
                 document.body.classList.remove('blender-active');
@@ -426,7 +524,7 @@
                 speak("Ai ai ai, minha barriga! Preciso fazer cocô!");
                 els.poopBtn.style.display = 'flex';
                 
-                // Limpa frutas
+                // Limpa frutas da tela
                 document.querySelectorAll('.fruit').forEach(el => el.remove());
                 return true;
             }
@@ -442,7 +540,15 @@
             els.poopBtn.style.display = 'none';
             els.monster.classList.remove('sick-face');
             
+            // Restaura cor original
+            const theme = monsterColors[colorIndex];
+            els.monsterBody.setAttribute('fill', theme.fill);
+            
             speak("Ufa! Que alívio! Agora estou com fome de novo.");
+            
+            // Limpa barriga visualmente
+            els.bellyCounter.innerText = '';
+            els.eatenFruits.innerHTML = '';
             
             setTimeout(() => {
                 startRound();
@@ -469,6 +575,11 @@
             const types = Object.keys(fruitsData);
             state.targetType = types[Math.floor(Math.random() * types.length)];
             state.targetCount = Math.floor(Math.random() * 3) + 1; // 1 a 3 frutas
+            state.eatenCount = 0;
+
+            // Limpa barriga para nova rodada
+            els.bellyCounter.innerText = '';
+            els.eatenFruits.innerHTML = '';
 
             const plural = state.targetCount > 1 ? 's' : '';
             const msg = `Quero <span class="highlight-num">${state.targetCount}</span> ${capitalize(state.targetType)}${plural}!`;
@@ -481,7 +592,6 @@
 
         // --- LÓGICA MODO VITAMINA ---
         function setupBlenderRound() {
-            // Cria receita: 2 ingredientes
             const types = Object.keys(fruitsData);
             const type1 = types[Math.floor(Math.random() * types.length)];
             let type2 = types[Math.floor(Math.random() * types.length)];
@@ -491,10 +601,9 @@
             const count2 = Math.floor(Math.random() * 2) + 1;
 
             state.blenderRecipe = { [type1]: count1, [type2]: count2 };
-            state.blenderContent = []; // Zera conteúdo atual
-            els.blenderLiquid.style.opacity = 0; // Esvazia copo
+            state.blenderContent = [];
+            els.blenderLiquid.style.opacity = 0;
 
-            // Monta frase
             const txt1 = `${count1} ${capitalize(type1)}${count1>1?'s':''}`;
             const txt2 = `${count2} ${capitalize(type2)}${count2>1?'s':''}`;
             
@@ -506,12 +615,10 @@
 
         function spawnFruits(qtd) {
             for(let i=0; i<qtd; i++) {
-                // Se for normal, garante algumas frutas certas. Se vitamina, garante ingredientes.
                 let type;
                 const types = Object.keys(fruitsData);
                 
                 if (Math.random() > 0.3) {
-                    // Chance maior de vir o que precisa
                     if (state.mode === 'normal') {
                         type = state.targetType;
                     } else {
@@ -532,7 +639,6 @@
             el.dataset.type = type;
             el.innerHTML = `<svg viewBox="0 0 70 70">${fruitsData[type].shape}</svg>`;
             
-            // Posição aleatória segura
             const x = Math.random() * (window.innerWidth - 80);
             const y = Math.random() * (window.innerHeight - 150);
             
@@ -598,7 +704,6 @@
                     }
                 }
             } else {
-                // Modo Vitamina
                 const blender = els.blenderSensor.getBoundingClientRect();
                 if (cx >= blender.left && cx <= blender.right && cy >= blender.top && cy <= blender.bottom) {
                     checkBlenderIngredient(el);
@@ -613,12 +718,24 @@
 
         // --- AÇÕES DO MODO NORMAL ---
         function eatFruitNormal(el) {
+            // Visual Clone na Barriga
+            const clone = el.cloneNode(true);
             el.remove();
+            
+            clone.className = 'eaten-fruit';
+            els.eatenFruits.appendChild(clone);
+
             playSound('eat');
             state.targetCount--;
+            state.eatenCount++;
             
-            // Animação visual de engolir
-            speak(state.targetCount > 0 ? "Nham!" : "Delícia!");
+            // Atualiza número na barriga
+            els.bellyCounter.innerText = state.eatenCount;
+            els.bellyCounter.classList.remove('number-pop');
+            void els.bellyCounter.offsetWidth;
+            els.bellyCounter.classList.add('number-pop');
+            
+            speak(state.targetCount > 0 ? state.eatenCount.toString() : "Delícia!");
 
             if (state.targetCount <= 0) {
                 state.poopMeter++;
@@ -633,22 +750,18 @@
             const needed = state.blenderRecipe[type];
 
             if (needed > 0) {
-                // Aceita fruta
                 state.blenderRecipe[type]--;
                 state.blenderContent.push(type);
                 el.remove();
                 playSound('pop');
                 
-                // Verifica se acabou
                 const totalRestante = Object.values(state.blenderRecipe).reduce((a,b)=>a+b, 0);
                 if (totalRestante === 0) {
                     finishBlender();
                 } else {
-                    // Atualiza texto
                     updateBlenderText();
                 }
             } else {
-                // Ingrediente errado ou em excesso
                 rejectItem();
             }
         }
@@ -666,18 +779,16 @@
             els.instruction.innerHTML = "Misturando...";
             playSound('blender');
             
-            // Animação de bater
             els.blender.classList.add('blender-shaking');
             
             setTimeout(() => {
                 els.blender.classList.remove('blender-shaking');
-                els.blenderLiquid.style.opacity = 1; // Copo cheio
+                els.blenderLiquid.style.opacity = 1; 
                 speak("Vitamina pronta! Glub glub glub!");
                 
-                // Simula monstro bebendo
                 setTimeout(() => {
                     els.blenderLiquid.style.opacity = 0;
-                    state.poopMeter += 2; // Vitamina enche mais a barriga
+                    state.poopMeter += 2;
                     startRound();
                 }, 3000);
             }, 1500);
@@ -687,13 +798,10 @@
         function moveEyes() {
             const left = document.getElementById('eye-left');
             const right = document.getElementById('eye-right');
-            
-            // Movimento aleatório simples
             const angle = Math.random() * Math.PI * 2;
             const r = 5;
             const dx = Math.cos(angle) * r;
             const dy = Math.sin(angle) * r;
-            
             left.setAttribute('cx', 100 + dx); left.setAttribute('cy', 100 + dy);
             right.setAttribute('cx', 200 + dx); right.setAttribute('cy', 100 + dy);
         }
