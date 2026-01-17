@@ -50,7 +50,7 @@
         /* --- BARRIGA (VISUAL) --- */
         #belly-container {
             position: absolute;
-            top: 200px; /* Ajustado para ficar em cima do círculo da barriga */
+            top: 200px;
             left: 90px;
             width: 120px;
             height: 100px;
@@ -92,7 +92,7 @@
             top: auto !important;
         }
 
-        /* Expressão de enjoo (Hora do cocô) */
+        /* Expressão de enjoo */
         .sick-face #monster-body { fill: #a8d5ba !important; transition: fill 0.5s; }
         .sick-face .eye-pupil { transform: scale(0.5); }
         .sick-face .mouth-path { d: path("M75 150 Q110 140 150 150 Q190 160 225 150"); fill: none; stroke: #333; stroke-width: 5; }
@@ -105,26 +105,50 @@
             right: 20px;
             width: 140px;
             height: 200px;
-            z-index: 4;
-            display: none; /* Oculto por padrão */
+            z-index: 40; /* Alto para ficar acima das frutas quando arrastado */
+            display: none;
             transition: transform 0.3s;
+            transform-origin: center bottom;
         }
 
+        /* Classe para quando o liquidificador pode ser arrastado */
+        .blender-ready {
+            cursor: grab;
+            animation: pulse-ready 1s infinite;
+            filter: drop-shadow(0 0 10px gold);
+        }
+        .blender-ready:active { cursor: grabbing; }
+
         #blender-sensor {
-            position: absolute;
-            top: 0;
-            left: 10;
-            width: 120px;
-            height: 150px;
-            z-index: 10;
+            position: absolute; top: 0; left: 10; width: 120px; height: 150px; z-index: 10;
         }
 
         .blender-active #monster-container {
-            left: 30%; /* Move monstro para esquerda no modo vitamina */
+            left: 30%; /* Move monstro para esquerda */
         }
         
-        .blender-shaking {
-            animation: shake 0.5s infinite;
+        .blender-shaking { animation: shake 0.5s infinite; }
+        
+        /* Animação de beber (virar o copo) */
+        .blender-drinking {
+            transition: transform 0.5s !important;
+            transform: rotate(-100deg) !important;
+        }
+
+        /* --- ANIMAÇÃO DO COCÔ --- */
+        .poop-drop {
+            position: absolute;
+            font-size: 80px;
+            z-index: 1; /* Atrás do monstro inicialmente */
+            animation: dropPoop 2s forwards;
+            left: 50%;
+            top: 55%; /* Começa na "saída" do monstro */
+        }
+
+        @keyframes dropPoop {
+            0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; }
+            20% { opacity: 1; transform: translate(-50%, 20px) scale(1); }
+            100% { transform: translate(-50%, 400px) scale(1); opacity: 0; }
         }
 
         /* --- CONTROLES LATERAIS --- */
@@ -140,41 +164,31 @@
         }
 
         .control-btn {
-            width: 60px;
-            height: 60px;
+            width: 60px; height: 60px;
             background: white;
             border-radius: 50%;
             border: 4px solid #3498db;
             cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            display: flex; justify-content: center; align-items: center;
             box-shadow: 0 4px 0 #2980b9;
             transition: transform 0.1s;
         }
         .control-btn:active { transform: translateY(4px); box-shadow: none; }
         .control-btn svg { width: 35px; height: 35px; fill: #333; }
         .btn-active { background: #ffeaa7; border-color: #f1c40f; box-shadow: 0 4px 0 #d35400; }
+        #btn-color { border-color: #9b59b6; box-shadow: 0 4px 0 #8e44ad; }
 
-        /* Botão de Cor (Novo) */
-        #btn-color {
-            border-color: #9b59b6;
-            box-shadow: 0 4px 0 #8e44ad;
-        }
-
-        /* Botão de Cocô (Aparece só quando precisa) */
+        /* Botão de Cocô */
         #poop-btn {
             position: absolute;
             bottom: 20px;
             left: 20px;
-            width: 80px;
-            height: 80px;
+            width: 80px; height: 80px;
             background: #fff;
             border-radius: 50%;
             border: 4px solid #e74c3c;
-            display: none; /* Escondido */
-            justify-content: center;
-            align-items: center;
+            display: none;
+            justify-content: center; align-items: center;
             z-index: 60;
             animation: pulse 1s infinite;
             cursor: pointer;
@@ -183,56 +197,33 @@
 
         /* --- UI E TEXTOS --- */
         #ui-layer {
-            position: absolute;
-            top: 10px;
-            width: 100%;
-            text-align: center;
-            z-index: 20;
-            pointer-events: none;
+            position: absolute; top: 10px; width: 100%; text-align: center; z-index: 20; pointer-events: none;
         }
 
         #instruction-bubble {
-            background: white;
-            padding: 15px 25px;
-            border-radius: 30px;
-            display: inline-block;
-            border: 3px solid #333;
-            font-size: 1.5rem;
-            box-shadow: 5px 5px 0 rgba(0,0,0,0.1);
-            max-width: 80%;
+            background: white; padding: 15px 25px; border-radius: 30px; display: inline-block;
+            border: 3px solid #333; font-size: 1.5rem; box-shadow: 5px 5px 0 rgba(0,0,0,0.1); max-width: 80%;
         }
 
         .highlight-num { color: #e74c3c; font-weight: bold; font-size: 1.8rem; }
 
         /* --- FRUTAS --- */
         .fruit {
-            width: 65px;
-            height: 65px;
-            position: absolute;
-            cursor: grab;
-            z-index: 30;
-            filter: drop-shadow(2px 4px 3px rgba(0,0,0,0.2));
-            transition: transform 0.1s;
+            width: 65px; height: 65px; position: absolute; cursor: grab; z-index: 30;
+            filter: drop-shadow(2px 4px 3px rgba(0,0,0,0.2)); transition: transform 0.1s;
         }
         .fruit:active { cursor: grabbing; transform: scale(1.1); }
 
         /* --- TELAS --- */
         #start-screen {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(46, 204, 113, 0.95);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100;
         }
         .big-btn {
-            background: #fff; color: #2ecc71;
-            border: none; padding: 20px 60px;
-            font-size: 2rem; border-radius: 50px;
-            cursor: pointer; box-shadow: 0 8px 0 #27ae60;
-            font-weight: bold;
+            background: #fff; color: #2ecc71; border: none; padding: 20px 60px;
+            font-size: 2rem; border-radius: 50px; cursor: pointer;
+            box-shadow: 0 8px 0 #27ae60; font-weight: bold;
         }
         .big-btn:active { transform: translateY(8px); box-shadow: none; }
 
@@ -240,14 +231,11 @@
         @keyframes shake {
             0% { transform: translate(1px, 1px) rotate(0deg); }
             10% { transform: translate(-1px, -2px) rotate(-1deg); }
-            20% { transform: translate(-3px, 0px) rotate(1deg); }
-            30% { transform: translate(3px, 2px) rotate(0deg); }
-            40% { transform: translate(1px, -1px) rotate(1deg); }
             50% { transform: translate(-1px, 2px) rotate(-1deg); }
-            60% { transform: translate(-3px, 1px) rotate(0deg); }
             100% { transform: translate(1px, -2px) rotate(-1deg); }
         }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        @keyframes pulse-ready { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
         @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
         @keyframes numberPop { 0% { transform: scale(1); } 50% { transform: scale(1.5); } 100% { transform: scale(1); } }
         .number-pop { animation: numberPop 0.3s ease-out; }
@@ -265,17 +253,11 @@
 
     <!-- CONTROLES LATERAIS -->
     <div id="controls-sidebar">
-        <!-- Botão Vitamina -->
         <div id="btn-blender" class="control-btn" onclick="toggleBlenderMode()" title="Fazer Vitamina">
-            <svg viewBox="0 0 24 24">
-                <path d="M19,19H5V8H19M19,8V6A2,2 0 0,0 17,4H7A2,2 0 0,0 5,6V8M19,19A2,2 0 0,1 17,21H7A2,2 0 0,1 5,19M9,13H15" fill="#333"/>
-            </svg>
+            <svg viewBox="0 0 24 24"><path d="M19,19H5V8H19M19,8V6A2,2 0 0,0 17,4H7A2,2 0 0,0 5,6V8M19,19A2,2 0 0,1 17,21H7A2,2 0 0,1 5,19M9,13H15" fill="#333"/></svg>
         </div>
-        <!-- Botão Cor (Pincel) -->
         <div id="btn-color" class="control-btn" onclick="toggleColor()" title="Mudar Cor">
-            <svg viewBox="0 0 24 24">
-                <path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z" fill="#333" />
-            </svg>
+            <svg viewBox="0 0 24 24"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z" fill="#333" /></svg>
         </div>
     </div>
 
@@ -285,7 +267,6 @@
     </div>
 
     <div id="game-container">
-        
         <!-- TEXTO DE INSTRUÇÃO -->
         <div id="ui-layer">
             <div id="instruction-bubble">Clique em JOGAR!</div>
@@ -295,7 +276,7 @@
         <div id="monster-container">
             <div id="mouth-sensor"></div>
             
-            <!-- BARRIGA (VISUAL RESTAURADO) -->
+            <!-- BARRIGA (VISUAL) -->
             <div id="belly-container">
                 <div id="eaten-fruits-visuals"></div>
                 <div id="belly-counter"></div>
@@ -304,10 +285,8 @@
             <svg id="monster-svg" viewBox="0 0 300 350" xmlns="http://www.w3.org/2000/svg">
                 <!-- Corpo -->
                 <path id="monster-body" d="M50 300 Q20 350 80 340 L220 340 Q280 350 250 300 Q280 200 250 100 Q230 20 150 20 Q70 20 50 100 Q20 200 50 300" fill="#7bed9f" stroke="#2ecc71" stroke-width="5"/>
-                
                 <!-- Barriga (Círculo Transparente) -->
                 <circle cx="150" cy="250" r="60" fill="rgba(255,255,255,0.5)" stroke="#fff" stroke-width="3" />
-                
                 <!-- Olhos -->
                 <g id="eyes">
                     <circle cx="100" cy="100" r="25" fill="white" stroke="#333" stroke-width="2"/>
@@ -315,13 +294,11 @@
                     <circle class="eye-pupil" id="eye-left" cx="100" cy="100" r="10" fill="black" />
                     <circle class="eye-pupil" id="eye-right" cx="200" cy="100" r="10" fill="black" />
                 </g>
-                
-                <!-- Boca Normal -->
+                <!-- Boca -->
                 <g id="mouth-group">
                     <path class="mouth-path" d="M75 130 Q150 130 225 130 Q225 180 150 180 Q75 180 75 130 Z" fill="#333" />
                     <path class="teeth" d="M85 130 L95 145 L105 130 M195 130 L205 145 L215 130" stroke="white" stroke-width="3" fill="white"/>
                 </g>
-
                 <!-- Braços -->
                 <path id="monster-arms-left" d="M60 200 Q20 220 30 180" stroke="#2ecc71" stroke-width="15" stroke-linecap="round" fill="none"/>
                 <path id="monster-arms-right" d="M240 200 Q280 220 270 180" stroke="#2ecc71" stroke-width="15" stroke-linecap="round" fill="none"/>
@@ -339,10 +316,9 @@
                 <!-- Base -->
                 <rect x="25" y="180" width="90" height="20" fill="#e74c3c"/>
                 <!-- Conteúdo (Líquido) -->
-                <path id="blender-liquid" d="M25 160 Q35 175 70 175 Q105 175 115 160 L118 100 Q70 110 22 100 Z" fill="#e67e22" opacity="0"/>
+                <path id="blender-liquid" d="M25 160 Q35 175 70 175 Q105 175 115 160 L118 100 Q70 110 22 100 Z" fill="#e67e22" opacity="0" style="transition: opacity 1s ease;"/>
             </svg>
         </div>
-
     </div>
 
     <!-- SCRIPT DO JOGO -->
@@ -360,32 +336,32 @@
             'limão': { color: '#6ab04c', shape: '<ellipse cx="35" cy="35" rx="25" ry="20" fill="#badc58" stroke="#6ab04c"/>' }
         };
 
-        // --- CORES DO MONSTRO ---
         const monsterColors = [
-            { fill: '#7bed9f', stroke: '#2ecc71' }, // Verde (Padrão)
-            { fill: '#ff7675', stroke: '#d63031' }, // Rosa/Vermelho
+            { fill: '#7bed9f', stroke: '#2ecc71' }, // Verde
+            { fill: '#ff7675', stroke: '#d63031' }, // Rosa
             { fill: '#74b9ff', stroke: '#0984e3' }, // Azul
             { fill: '#a29bfe', stroke: '#6c5ce7' }, // Roxo
-            { fill: '#ffeaa7', stroke: '#fdcb6e' }  // Amarelo/Laranja
+            { fill: '#ffeaa7', stroke: '#fdcb6e' }  // Amarelo
         ];
         let colorIndex = 0;
 
-        // --- ESTADO DO JOGO ---
+        // --- ESTADO ---
         let state = {
-            mode: 'normal', // 'normal' ou 'blender'
-            targetCount: 0, // Frutas restantes para pedir
-            eatenCount: 0, // Quantas comeu na rodada (para o visual)
-            targetType: '', // Tipo atual no modo normal
-            blenderRecipe: {}, // Ex: { banana: 2, morango: 1 } no modo vitamina
-            blenderContent: [], // O que já foi colocado
-            poopMeter: 0, // 0 a 100. 100 = precisa fazer cocô
+            mode: 'normal',
+            targetCount: 0,
+            eatenCount: 0,
+            targetType: '',
+            blenderRecipe: {},
+            blenderContent: [],
+            blenderReady: false, // Nova flag: se o suco está pronto para beber
+            poopMeter: 0,
             isPlaying: false,
             needsPoop: false
         };
 
         const MAX_POOP = 6;
 
-        // Elementos DOM
+        // DOM Elements
         const els = {
             instruction: document.getElementById('instruction-bubble'),
             monster: document.getElementById('monster-container'),
@@ -405,18 +381,15 @@
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-        // --- ÁUDIO E FALA ---
-        function speak(text, queue = false) {
-            if (!queue) window.speechSynthesis.cancel();
-            
+        // --- ÁUDIO ---
+        function speak(text) {
+            window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'pt-BR';
             utterance.rate = 1.1; 
-            
             const voices = window.speechSynthesis.getVoices();
             const preferredVoice = voices.find(v => v.name.includes('Google Português') || v.name.includes('Luciana'));
             if(preferredVoice) utterance.voice = preferredVoice;
-
             window.speechSynthesis.speak(utterance);
         }
 
@@ -426,7 +399,6 @@
             const gainNode = audioCtx.createGain();
             osc.connect(gainNode);
             gainNode.connect(audioCtx.destination);
-
             const now = audioCtx.currentTime;
 
             if (type === 'pop') {
@@ -447,6 +419,13 @@
                 gainNode.gain.setValueAtTime(0.2, now);
                 gainNode.gain.linearRampToValueAtTime(0, now + 1.5);
                 osc.start(); osc.stop(now + 1.5);
+            } else if (type === 'glub') { // Som de beber
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.linearRampToValueAtTime(200, now + 0.2);
+                gainNode.gain.setValueAtTime(0.3, now);
+                gainNode.gain.linearRampToValueAtTime(0, now + 0.2);
+                osc.start(); osc.stop(now + 0.3);
             } else if (type === 'fart') {
                 osc.type = 'sawtooth';
                 osc.frequency.setValueAtTime(150, now);
@@ -454,68 +433,30 @@
                 gainNode.gain.setValueAtTime(0.5, now);
                 gainNode.gain.linearRampToValueAtTime(0, now + 0.4);
                 osc.start(); osc.stop(now + 0.4);
-            } else if (type === 'flush') {
-                const bufferSize = audioCtx.sampleRate * 1;
-                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-                const data = buffer.getChannelData(0);
-                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-                
-                const noise = audioCtx.createBufferSource();
-                noise.buffer = buffer;
-                const noiseGain = audioCtx.createGain();
-                noiseGain.gain.setValueAtTime(0.5, now);
-                noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 1);
-                noise.connect(noiseGain);
-                noiseGain.connect(audioCtx.destination);
-                noise.start();
             }
         }
 
-        // --- CONTROLE DE COR ---
+        // --- CONTROLES GERAIS ---
         function toggleColor() {
+            if (state.needsPoop) { speak("Agora não, estou passando mal!"); return; }
             colorIndex = (colorIndex + 1) % monsterColors.length;
             const theme = monsterColors[colorIndex];
-            
-            // Só muda a cor se não estiver com cara de enjoo
-            if (!state.needsPoop) {
-                els.monsterBody.setAttribute('fill', theme.fill);
-                els.monsterBody.setAttribute('stroke', theme.stroke);
-                els.monsterArmsLeft.setAttribute('stroke', theme.stroke);
-                els.monsterArmsRight.setAttribute('stroke', theme.stroke);
-                
-                playSound('pop');
-            } else {
-                speak("Agora não, estou passando mal!");
-            }
+            els.monsterBody.setAttribute('fill', theme.fill);
+            els.monsterBody.setAttribute('stroke', theme.stroke);
+            els.monsterArmsLeft.setAttribute('stroke', theme.stroke);
+            els.monsterArmsRight.setAttribute('stroke', theme.stroke);
+            playSound('pop');
         }
 
-        // --- CONTROLE DE FLUXO ---
         function startGame() {
             document.getElementById('start-screen').style.display = 'none';
             if (audioCtx.state === 'suspended') audioCtx.resume();
+            // Inicializa drag do liquidificador
+            setupBlenderDrag();
             startRound();
         }
 
-        function toggleBlenderMode() {
-            if (state.needsPoop) return;
-
-            state.mode = (state.mode === 'normal') ? 'blender' : 'normal';
-            
-            if (state.mode === 'blender') {
-                els.blender.style.display = 'block';
-                document.body.classList.add('blender-active');
-                els.btnBlender.classList.add('btn-active');
-                // Limpa visuais da barriga
-                els.bellyCounter.innerText = '';
-                els.eatenFruits.innerHTML = '';
-            } else {
-                els.blender.style.display = 'none';
-                document.body.classList.remove('blender-active');
-                els.btnBlender.classList.remove('btn-active');
-            }
-            startRound();
-        }
-
+        // --- SISTEMA DE COCÔ ---
         function checkPoopStatus() {
             if (state.poopMeter >= MAX_POOP) {
                 state.needsPoop = true;
@@ -523,8 +464,6 @@
                 els.instruction.innerHTML = "Ai minha barriga! Preciso fazer cocô!";
                 speak("Ai ai ai, minha barriga! Preciso fazer cocô!");
                 els.poopBtn.style.display = 'flex';
-                
-                // Limpa frutas da tela
                 document.querySelectorAll('.fruit').forEach(el => el.remove());
                 return true;
             }
@@ -533,20 +472,31 @@
 
         function doPoop() {
             playSound('fart');
-            setTimeout(() => playSound('flush'), 500);
             
+            // Animação visual do cocô caindo
+            const poopVisual = document.createElement('div');
+            poopVisual.innerHTML = '💩';
+            poopVisual.className = 'poop-drop';
+            // Pega posição do monstro para centralizar o cocô
+            const mRect = els.monster.getBoundingClientRect();
+            poopVisual.style.left = (mRect.left + mRect.width/2 - 40) + 'px'; // -40 metade da fonte
+            poopVisual.style.top = (mRect.bottom - 80) + 'px';
+            els.gameContainer.appendChild(poopVisual);
+
+            // Remove visual após animação
+            setTimeout(() => poopVisual.remove(), 2000);
+
             state.poopMeter = 0;
             state.needsPoop = false;
             els.poopBtn.style.display = 'none';
             els.monster.classList.remove('sick-face');
             
-            // Restaura cor original
+            // Restaura cor
             const theme = monsterColors[colorIndex];
             els.monsterBody.setAttribute('fill', theme.fill);
             
             speak("Ufa! Que alívio! Agora estou com fome de novo.");
             
-            // Limpa barriga visualmente
             els.bellyCounter.innerText = '';
             els.eatenFruits.innerHTML = '';
             
@@ -555,42 +505,78 @@
             }, 3000);
         }
 
+        function toggleBlenderMode() {
+            if (state.needsPoop) return;
+            state.mode = (state.mode === 'normal') ? 'blender' : 'normal';
+            
+            if (state.mode === 'blender') {
+                els.blender.style.display = 'block';
+                document.body.classList.add('blender-active');
+                els.btnBlender.classList.add('btn-active');
+                els.bellyCounter.innerText = '';
+                els.eatenFruits.innerHTML = '';
+            } else {
+                els.blender.style.display = 'none';
+                document.body.classList.remove('blender-active');
+                els.btnBlender.classList.remove('btn-active');
+                resetBlender();
+            }
+            startRound();
+        }
+
         function startRound() {
             if (checkPoopStatus()) return;
-
             state.isPlaying = true;
+            state.blenderReady = false;
+            els.blender.classList.remove('blender-ready');
             document.querySelectorAll('.fruit').forEach(el => el.remove());
 
-            if (state.mode === 'normal') {
-                setupNormalRound();
-            } else {
-                setupBlenderRound();
-            }
+            if (state.mode === 'normal') setupNormalRound();
+            else setupBlenderRound();
             
             moveEyes();
         }
 
-        // --- LÓGICA MODO NORMAL ---
+        // --- MODO NORMAL ---
         function setupNormalRound() {
             const types = Object.keys(fruitsData);
             state.targetType = types[Math.floor(Math.random() * types.length)];
-            state.targetCount = Math.floor(Math.random() * 3) + 1; // 1 a 3 frutas
+            state.targetCount = Math.floor(Math.random() * 3) + 1;
             state.eatenCount = 0;
-
-            // Limpa barriga para nova rodada
             els.bellyCounter.innerText = '';
             els.eatenFruits.innerHTML = '';
 
             const plural = state.targetCount > 1 ? 's' : '';
-            const msg = `Quero <span class="highlight-num">${state.targetCount}</span> ${capitalize(state.targetType)}${plural}!`;
-            
-            els.instruction.innerHTML = msg;
+            els.instruction.innerHTML = `Quero <span class="highlight-num">${state.targetCount}</span> ${capitalize(state.targetType)}${plural}!`;
             speak(`Eu quero ${state.targetCount} ${state.targetType}${plural}`);
-
             spawnFruits(10);
         }
 
-        // --- LÓGICA MODO VITAMINA ---
+        function eatFruitNormal(el) {
+            const clone = el.cloneNode(true);
+            el.remove();
+            clone.className = 'eaten-fruit';
+            els.eatenFruits.appendChild(clone);
+
+            playSound('eat');
+            state.targetCount--;
+            state.eatenCount++;
+            
+            els.bellyCounter.innerText = state.eatenCount;
+            els.bellyCounter.classList.remove('number-pop');
+            void els.bellyCounter.offsetWidth;
+            els.bellyCounter.classList.add('number-pop');
+            
+            speak(state.targetCount > 0 ? state.eatenCount.toString() : "Delícia!");
+
+            if (state.targetCount <= 0) {
+                state.poopMeter++;
+                state.isPlaying = false;
+                setTimeout(startRound, 2000);
+            }
+        }
+
+        // --- MODO VITAMINA ---
         function setupBlenderRound() {
             const types = Object.keys(fruitsData);
             const type1 = types[Math.floor(Math.random() * types.length)];
@@ -608,144 +594,13 @@
             const txt2 = `${count2} ${capitalize(type2)}${count2>1?'s':''}`;
             
             els.instruction.innerHTML = `Vitamina: <span class="highlight-num">${txt1}</span> e <span class="highlight-num">${txt2}</span>`;
-            speak(`Vamos fazer vitamina de ${type1} com ${type2}. Coloque tudo no liquidificador!`);
-
+            speak(`Vamos fazer vitamina de ${type1} com ${type2}.`);
             spawnFruits(12);
         }
 
-        function spawnFruits(qtd) {
-            for(let i=0; i<qtd; i++) {
-                let type;
-                const types = Object.keys(fruitsData);
-                
-                if (Math.random() > 0.3) {
-                    if (state.mode === 'normal') {
-                        type = state.targetType;
-                    } else {
-                        const ingredients = Object.keys(state.blenderRecipe);
-                        type = ingredients[Math.floor(Math.random() * ingredients.length)];
-                    }
-                } else {
-                    type = types[Math.floor(Math.random() * types.length)];
-                }
-                
-                createFruit(type);
-            }
-        }
-
-        function createFruit(type) {
-            const el = document.createElement('div');
-            el.className = 'fruit';
-            el.dataset.type = type;
-            el.innerHTML = `<svg viewBox="0 0 70 70">${fruitsData[type].shape}</svg>`;
-            
-            const x = Math.random() * (window.innerWidth - 80);
-            const y = Math.random() * (window.innerHeight - 150);
-            
-            el.style.left = x + 'px';
-            el.style.top = y + 'px';
-            el.style.animation = 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-            
-            setupDrag(el);
-            els.gameContainer.appendChild(el);
-        }
-
-        // --- SISTEMA DE ARRASTAR E SOLTAR ---
-        function setupDrag(el) {
-            let startX, startY, initialLeft, initialTop;
-
-            function onStart(e) {
-                if (!state.isPlaying) return;
-                e.preventDefault();
-                const touch = e.type === 'touchstart' ? e.touches[0] : e;
-                startX = touch.clientX;
-                startY = touch.clientY;
-                initialLeft = el.offsetLeft;
-                initialTop = el.offsetTop;
-                el.style.zIndex = 1000;
-
-                function onMove(me) {
-                    const mt = me.type === 'touchmove' ? me.touches[0] : me;
-                    el.style.left = (initialLeft + (mt.clientX - startX)) + 'px';
-                    el.style.top = (initialTop + (mt.clientY - startY)) + 'px';
-                }
-
-                function onEnd() {
-                    document.removeEventListener('mousemove', onMove);
-                    document.removeEventListener('mouseup', onEnd);
-                    document.removeEventListener('touchmove', onMove);
-                    document.removeEventListener('touchend', onEnd);
-                    el.style.zIndex = 30;
-                    checkDrop(el);
-                }
-
-                document.addEventListener('mousemove', onMove);
-                document.addEventListener('mouseup', onEnd);
-                document.addEventListener('touchmove', onMove, {passive: false});
-                document.addEventListener('touchend', onEnd);
-            }
-
-            el.addEventListener('mousedown', onStart);
-            el.addEventListener('touchstart', onStart, {passive: false});
-        }
-
-        function checkDrop(el) {
-            const rect = el.getBoundingClientRect();
-            const cx = rect.left + rect.width/2;
-            const cy = rect.top + rect.height/2;
-
-            if (state.mode === 'normal') {
-                const mouth = els.mouthSensor.getBoundingClientRect();
-                if (cx >= mouth.left && cx <= mouth.right && cy >= mouth.top && cy <= mouth.bottom) {
-                    if (el.dataset.type === state.targetType) {
-                        eatFruitNormal(el);
-                    } else {
-                        rejectItem();
-                    }
-                }
-            } else {
-                const blender = els.blenderSensor.getBoundingClientRect();
-                if (cx >= blender.left && cx <= blender.right && cy >= blender.top && cy <= blender.bottom) {
-                    checkBlenderIngredient(el);
-                }
-            }
-        }
-
-        function rejectItem() {
-            speak("Essa não!");
-            playSound('pop');
-        }
-
-        // --- AÇÕES DO MODO NORMAL ---
-        function eatFruitNormal(el) {
-            // Visual Clone na Barriga
-            const clone = el.cloneNode(true);
-            el.remove();
-            
-            clone.className = 'eaten-fruit';
-            els.eatenFruits.appendChild(clone);
-
-            playSound('eat');
-            state.targetCount--;
-            state.eatenCount++;
-            
-            // Atualiza número na barriga
-            els.bellyCounter.innerText = state.eatenCount;
-            els.bellyCounter.classList.remove('number-pop');
-            void els.bellyCounter.offsetWidth;
-            els.bellyCounter.classList.add('number-pop');
-            
-            speak(state.targetCount > 0 ? state.eatenCount.toString() : "Delícia!");
-
-            if (state.targetCount <= 0) {
-                state.poopMeter++;
-                state.isPlaying = false;
-                setTimeout(startRound, 2000);
-            }
-        }
-
-        // --- AÇÕES DO MODO VITAMINA ---
         function checkBlenderIngredient(el) {
+            if (state.blenderReady) return; // Não aceita mais frutas se tiver pronto
+
             const type = el.dataset.type;
             const needed = state.blenderRecipe[type];
 
@@ -762,7 +617,8 @@
                     updateBlenderText();
                 }
             } else {
-                rejectItem();
+                speak("Essa não!");
+                playSound('pop');
             }
         }
 
@@ -775,23 +631,193 @@
         }
 
         function finishBlender() {
-            state.isPlaying = false;
             els.instruction.innerHTML = "Misturando...";
             playSound('blender');
-            
             els.blender.classList.add('blender-shaking');
             
             setTimeout(() => {
                 els.blender.classList.remove('blender-shaking');
                 els.blenderLiquid.style.opacity = 1; 
-                speak("Vitamina pronta! Glub glub glub!");
+                
+                // --- NOVO: HABILITA ARRASTAR LIQUIDIFICADOR ---
+                state.blenderReady = true;
+                els.blender.classList.add('blender-ready');
+                els.instruction.innerHTML = "Agora dê para o monstro!";
+                speak("Pronto! Agora arraste o liquidificador até a minha boca!");
+                
+                // Remove frutas que sobraram para limpar a tela
+                document.querySelectorAll('.fruit').forEach(el => el.remove());
+            }, 1500);
+        }
+
+        // --- DRAG DO LIQUIDIFICADOR (NOVA FUNÇÃO) ---
+        function setupBlenderDrag() {
+            let startX, startY, initialLeft, initialTop;
+            const el = els.blender;
+
+            function onStart(e) {
+                if (!state.blenderReady) return; // Só arrasta se estiver pronto
+                e.preventDefault();
+                const touch = e.type === 'touchstart' ? e.touches[0] : e;
+                startX = touch.clientX;
+                startY = touch.clientY;
+                // Pega a posição computada atual, pois o CSS define positions diferentes
+                const rect = el.getBoundingClientRect();
+                initialLeft = el.offsetLeft;
+                initialTop = el.offsetTop;
+                el.style.zIndex = 100;
+
+                function onMove(me) {
+                    const mt = me.type === 'touchmove' ? me.touches[0] : me;
+                    const dx = mt.clientX - startX;
+                    const dy = mt.clientY - startY;
+                    el.style.transform = `translate(${dx}px, ${dy}px)`; // Usa transform para mover temporariamente
+                }
+
+                function onEnd() {
+                    document.removeEventListener('mousemove', onMove);
+                    document.removeEventListener('mouseup', onEnd);
+                    document.removeEventListener('touchmove', onMove);
+                    document.removeEventListener('touchend', onEnd);
+                    
+                    // Checa colisão
+                    const bRect = el.getBoundingClientRect();
+                    const bCx = bRect.left + bRect.width/2;
+                    const bCy = bRect.top + bRect.height/2;
+                    const mRect = els.mouthSensor.getBoundingClientRect();
+
+                    if (bCx >= mRect.left && bCx <= mRect.right && bCy >= mRect.top && bCy <= mRect.bottom) {
+                        feedMonsterJuice();
+                    } else {
+                        // Volta para o lugar
+                        el.style.transform = 'none';
+                    }
+                }
+
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('mouseup', onEnd);
+                document.addEventListener('touchmove', onMove, {passive: false});
+                document.addEventListener('touchend', onEnd);
+            }
+
+            el.addEventListener('mousedown', onStart);
+            el.addEventListener('touchstart', onStart, {passive: false});
+        }
+
+        function feedMonsterJuice() {
+            state.blenderReady = false;
+            els.blender.classList.remove('blender-ready');
+            
+            // Posiciona o liquidificador na boca
+            const mRect = els.mouthSensor.getBoundingClientRect();
+            // Calcula offset para centralizar na boca (aproximado)
+            // Como estamos usando transform no drag, precisamos resetar e posicionar fixed ou calc
+            // Vamos simplificar: animar classe CSS
+            els.blender.style.transform = 'translate(-80px, -200px) rotate(-100deg)'; // Ajuste visual grosseiro para "virar" na boca
+            els.blender.style.transition = 'transform 0.5s';
+            
+            setTimeout(() => {
+                // Esvazia copo
+                els.blenderLiquid.style.opacity = 0;
+                playSound('glub');
                 
                 setTimeout(() => {
-                    els.blenderLiquid.style.opacity = 0;
+                    playSound('eat'); // Arroto/Satisfação
+                    speak("Hummm que delícia de suco!");
+                    
+                    // Reseta liquidificador
+                    resetBlender();
                     state.poopMeter += 2;
                     startRound();
-                }, 3000);
-            }, 1500);
+                }, 1500);
+            }, 500);
+        }
+
+        function resetBlender() {
+            els.blender.style.transform = 'none';
+            els.blender.style.transition = 'transform 0.3s';
+            state.blenderReady = false;
+            els.blender.classList.remove('blender-ready');
+            els.blenderLiquid.style.opacity = 0;
+        }
+
+        // --- SISTEMA DE FRUTAS (Criação e Drag) ---
+        function spawnFruits(qtd) {
+            for(let i=0; i<qtd; i++) {
+                let type;
+                const types = Object.keys(fruitsData);
+                if (Math.random() > 0.3) {
+                    if (state.mode === 'normal') type = state.targetType;
+                    else {
+                        const ingredients = Object.keys(state.blenderRecipe);
+                        type = ingredients[Math.floor(Math.random() * ingredients.length)];
+                    }
+                } else type = types[Math.floor(Math.random() * types.length)];
+                createFruit(type);
+            }
+        }
+
+        function createFruit(type) {
+            const el = document.createElement('div');
+            el.className = 'fruit';
+            el.dataset.type = type;
+            el.innerHTML = `<svg viewBox="0 0 70 70">${fruitsData[type].shape}</svg>`;
+            const x = Math.random() * (window.innerWidth - 80);
+            const y = Math.random() * (window.innerHeight - 150);
+            el.style.left = x + 'px'; el.style.top = y + 'px';
+            el.style.animation = 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            setupFruitDrag(el);
+            els.gameContainer.appendChild(el);
+        }
+
+        function setupFruitDrag(el) {
+            let startX, startY, initialLeft, initialTop;
+            function onStart(e) {
+                if (!state.isPlaying) return;
+                e.preventDefault();
+                const touch = e.type === 'touchstart' ? e.touches[0] : e;
+                startX = touch.clientX; startY = touch.clientY;
+                initialLeft = el.offsetLeft; initialTop = el.offsetTop;
+                el.style.zIndex = 1000;
+                function onMove(me) {
+                    const mt = me.type === 'touchmove' ? me.touches[0] : me;
+                    el.style.left = (initialLeft + (mt.clientX - startX)) + 'px';
+                    el.style.top = (initialTop + (mt.clientY - startY)) + 'px';
+                }
+                function onEnd() {
+                    document.removeEventListener('mousemove', onMove);
+                    document.removeEventListener('mouseup', onEnd);
+                    document.removeEventListener('touchmove', onMove);
+                    document.removeEventListener('touchend', onEnd);
+                    el.style.zIndex = 30;
+                    checkDrop(el);
+                }
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('mouseup', onEnd);
+                document.addEventListener('touchmove', onMove, {passive: false});
+                document.addEventListener('touchend', onEnd);
+            }
+            el.addEventListener('mousedown', onStart);
+            el.addEventListener('touchstart', onStart, {passive: false});
+        }
+
+        function checkDrop(el) {
+            const rect = el.getBoundingClientRect();
+            const cx = rect.left + rect.width/2;
+            const cy = rect.top + rect.height/2;
+
+            if (state.mode === 'normal') {
+                const mouth = els.mouthSensor.getBoundingClientRect();
+                if (cx >= mouth.left && cx <= mouth.right && cy >= mouth.top && cy <= mouth.bottom) {
+                    if (el.dataset.type === state.targetType) eatFruitNormal(el);
+                    else { speak("Essa não!"); playSound('pop'); }
+                }
+            } else {
+                const blender = els.blenderSensor.getBoundingClientRect();
+                if (cx >= blender.left && cx <= blender.right && cy >= blender.top && cy <= blender.bottom) {
+                    checkBlenderIngredient(el);
+                }
+            }
         }
 
         // --- UTILITÁRIOS ---
@@ -805,11 +831,7 @@
             left.setAttribute('cx', 100 + dx); left.setAttribute('cy', 100 + dy);
             right.setAttribute('cx', 200 + dx); right.setAttribute('cy', 100 + dy);
         }
-
-        function capitalize(s) {
-            return s.charAt(0).toUpperCase() + s.slice(1);
-        }
-        
+        function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
         setInterval(moveEyes, 2000);
 
     </script>
