@@ -332,6 +332,13 @@
     </div>
 
     <script>
+        // CONFIGURAÇÃO DOS GÊNEROS PARA CORREÇÃO GRAMATICAL
+        const fruitGenders = {
+            'morango': 'M', 'banana': 'F', 'maçã': 'F', 'uva': 'F', 
+            'laranja': 'F', 'pera': 'F', 'melancia': 'F', 
+            'abacaxi': 'M', 'limão': 'M'
+        };
+
         const fruitsData = {
             'morango': { color: '#e74c3c', shape: '<path d="M35 10 Q55 10 60 25 Q65 60 35 70 Q5 60 10 25 Q15 10 35 10 Z" fill="#e74c3c"/><path d="M35 10 L35 2" stroke="green" stroke-width="3"/>' },
             'banana': { color: '#f1c40f', shape: '<path d="M10 50 Q35 70 60 20 Q40 60 10 40 Z" fill="#f1c40f" stroke="#f39c12"/>' },
@@ -356,7 +363,7 @@
             poopMeter: 0, isPlaying: false, needsPoop: false, activeDrag: null,
             justActivatedBlender: false, lastSoundTime: 0, lastAmbientSpeechTime: 0,
             dirtSpots: [], lastCleanTime: 0,
-            audioQueue: [] // Fila para tocar audios em sequencia
+            audioQueue: [] 
         };
 
         const MAX_POOP = 6;
@@ -385,17 +392,13 @@
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
         // --- SISTEMA DE ÁUDIO MP3 ---
-        // Funcao para tocar um arquivo, ou uma sequencia (array)
         function playVoice(input, isAmbient = false) {
-            // Se for audio de ambiente e tocou recentemente, ignora
             if (isAmbient && (Date.now() - state.lastAmbientSpeechTime < 2000)) return;
             if (isAmbient) state.lastAmbientSpeechTime = Date.now();
 
             if (Array.isArray(input)) {
-                // Toca sequencia
                 playAudioSequence(input);
             } else {
-                // Toca unico arquivo
                 const audio = new Audio(`mp3/${input}.mp3`);
                 audio.play().catch(e => console.log("Audio não encontrado ou bloqueado: " + input));
             }
@@ -406,26 +409,25 @@
             const current = list[0];
             const audio = new Audio(`mp3/${current}.mp3`);
             
-            audio.onended = function() {
-                playAudioSequence(list.slice(1));
-            };
-            
-            audio.onerror = function() {
-                // Se der erro (arquivo nao existe), pula para o proximo
-                console.log("Audio pulado (erro): " + current);
-                playAudioSequence(list.slice(1));
-            }
-
-            audio.play().catch(e => {
-                // Se der erro de play (bloqueio), tenta o proximo
-                playAudioSequence(list.slice(1));
-            });
+            audio.onended = function() { playAudioSequence(list.slice(1)); };
+            audio.onerror = function() { console.log("Pulo (erro): " + current); playAudioSequence(list.slice(1)); }
+            audio.play().catch(e => { playAudioSequence(list.slice(1)); });
         }
 
-        // Sintetizador de efeitos sonoros (mantido para efeitos como POP, FART, EAT)
+        // --- LOGICA GRAMATICAL ---
+        function getNumberAudio(number, fruitName) {
+            // Remove acentos para achar no mapa
+            const safeName = fruitName.replace(/[ãáàâ]/g, "a").replace("ç", "c").replace("ê", "e").replace("õ", "o").toLowerCase();
+            const gender = fruitGenders[safeName] || 'M'; // Padrão Masculino se não achar
+
+            if (number === 1 && gender === 'F') return 'uma';
+            if (number === 2 && gender === 'F') return 'duas';
+            return number.toString();
+        }
+
+        // Sintetizador de efeitos sonoros
         function playSound(type) {
             if (audioCtx.state === 'suspended') audioCtx.resume();
-            
             const now = audioCtx.currentTime;
             if (type === 'water' && now - state.lastSoundTime < 0.15) return;
             state.lastSoundTime = now;
@@ -474,18 +476,12 @@
 
         function scheduleNextDirt() {
             const delay = 30000 + Math.random() * 20000;
-            setTimeout(() => {
-                tryAddDirt();
-                scheduleNextDirt(); 
-            }, delay);
+            setTimeout(() => { tryAddDirt(); scheduleNextDirt(); }, delay);
         }
 
         function tryAddDirt() {
             if (state.dirtSpots.length > 8) return;
-            let attempts = 0;
-            let success = false;
-            let x, y, r;
-
+            let attempts = 0, success = false, x, y, r;
             while (!success && attempts < 10) {
                 x = 60 + Math.random() * 180;
                 y = 100 + Math.random() * 200;
@@ -493,8 +489,7 @@
                 if (y < 160) { attempts++; continue; }
                 let overlap = false;
                 for (let spot of state.dirtSpots) {
-                    const dx = spot.x - x;
-                    const dy = spot.y - y;
+                    const dx = spot.x - x; const dy = spot.y - y;
                     const dist = Math.sqrt(dx*dx + dy*dy);
                     if (dist < (spot.r + r + 5)) { overlap = true; break; }
                 }
@@ -506,9 +501,7 @@
 
         function addDirtSpot(x, y, r) {
             const spot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-            spot.setAttribute("cx", x);
-            spot.setAttribute("cy", y);
-            spot.setAttribute("r", r);
+            spot.setAttribute("cx", x); spot.setAttribute("cy", y); spot.setAttribute("r", r);
             spot.setAttribute("class", "dirt-spot");
             els.dirtGroup.appendChild(spot);
             state.dirtSpots.push({ x, y, r, el: spot });
@@ -519,9 +512,7 @@
             if (index > -1) {
                 spotData.el.style.opacity = '0';
                 spotData.el.style.transform = 'scale(1.5)';
-                setTimeout(() => {
-                    if (spotData.el.parentNode) spotData.el.parentNode.removeChild(spotData.el);
-                }, 500);
+                setTimeout(() => { if (spotData.el.parentNode) spotData.el.parentNode.removeChild(spotData.el); }, 500);
                 state.dirtSpots.splice(index, 1);
                 createParticle(spotData.x, spotData.y, 'bubble');
                 playSound('water');
@@ -544,7 +535,7 @@
                 state.needsPoop = true;
                 els.monster.className = 'sick-face';
                 els.instruction.innerHTML = "Ai minha barriga!";
-                playVoice('dor_barriga'); // Alterado para MP3
+                playVoice('dor_barriga'); 
                 els.poopBtn.style.display = 'flex';
                 els.shelf.style.opacity = '0.3';
                 els.shelf.style.pointerEvents = 'none';
@@ -569,7 +560,7 @@
             els.monster.className = 'monster-idle';
             els.shelf.style.opacity = '1';
             els.shelf.style.pointerEvents = 'auto';
-            playVoice('alivio'); // Alterado para MP3
+            playVoice('alivio');
             els.bellyCounter.innerText = '';
             els.eatenFruits.innerHTML = '';
             setTimeout(startRound, 2500);
@@ -612,20 +603,16 @@
                 els.monster.classList.add('heart-face');
                 els.monster.classList.add('interactive'); 
                 els.instruction.innerHTML = "Dê carinho no monstro!";
-                
-                playVoice('quero_carinho'); // Alterado para MP3
+                playVoice('quero_carinho'); 
                 if(Math.random() > 0.5) setTimeout(()=> playVoice('instrucao_carinho'), 2000);
-
                 hideShelf();
             } 
             else if (state.mode === 'bath') {
                 els.btnBath.classList.add('btn-active');
                 els.monster.classList.add('interactive'); 
                 els.instruction.innerHTML = "Hora do banho!";
-                
-                playVoice('modo_banho'); // Alterado para MP3
+                playVoice('modo_banho'); 
                 if(Math.random() > 0.5) setTimeout(()=> playVoice('instrucao_banho'), 2000);
-
                 els.sponge.style.display = 'block';
                 hideShelf();
             } 
@@ -659,9 +646,7 @@
                     
                     createParticle(clientX, clientY, 'heart');
                     playSound('heart');
-                    if(Math.random() > 0.7) {
-                        playVoice(heartSounds[Math.floor(Math.random()*heartSounds.length)], true);
-                    }
+                    if(Math.random() > 0.7) playVoice(heartSounds[Math.floor(Math.random()*heartSounds.length)], true);
                 }
             };
 
@@ -711,9 +696,7 @@
             const p = document.createElement('div');
             p.className = type === 'heart' ? 'heart-particle' : 'bubble-particle';
             
-            if (type === 'heart') {
-                p.innerHTML = ['❤️','💖','✨','💕'][Math.floor(Math.random()*4)];
-            }
+            if (type === 'heart') p.innerHTML = ['❤️','💖','✨','💕'][Math.floor(Math.random()*4)];
             
             const randX = (Math.random() - 0.5) * 40;
             p.style.left = (x + randX) + 'px';
@@ -818,7 +801,7 @@
         function setupNormalRound() {
             const types = Object.keys(fruitsData);
             state.targetType = types[Math.floor(Math.random() * types.length)];
-            state.targetCount = Math.floor(Math.random() * 3) + 1; // Entre 1 e 3 para ser facil
+            state.targetCount = Math.floor(Math.random() * 3) + 1; 
             state.eatenCount = 0;
             els.bellyCounter.innerText = '';
             els.eatenFruits.innerHTML = '';
@@ -826,9 +809,11 @@
             
             els.instruction.innerHTML = `Quero <span class="highlight-num">${state.targetCount}</span> ${state.targetType}${plural}!`;
             
-            // TOCA: "Quero" -> Numero -> Fruta
-            const normalFruitName = state.targetType.replace(/[ãáàâ]/g, "a").replace("ç", "c").replace("ê", "e").replace("õ", "o");
-            playVoice(['quero', state.targetCount, normalFruitName]);
+            // CORREÇÃO: Pega o áudio correto (Um/Uma/Dois/Duas) baseado no gênero da fruta
+            const fruitSafeName = state.targetType.replace(/[ãáàâ]/g, "a").replace("ç", "c").replace("ê", "e").replace("õ", "o");
+            const numAudio = getNumberAudio(state.targetCount, state.targetType);
+
+            playVoice(['quero', numAudio, fruitSafeName]);
 
             fillBasket([state.targetType]);
         }
@@ -842,8 +827,9 @@
             state.targetCount--; state.eatenCount++;
             els.bellyCounter.innerText = state.eatenCount;
             
-            // Fala apenas o numeral
-            playVoice(state.eatenCount.toString());
+            // CORREÇÃO: Fala o número com gênero correto (Ex: "Uma..." "Duas...")
+            const numAudio = getNumberAudio(state.eatenCount, state.targetType);
+            playVoice(numAudio);
             
             if (state.targetCount <= 0) {
                 setTimeout(() => playVoice('delicia'), 1000);
@@ -860,13 +846,11 @@
             els.blenderLiquid.style.opacity = 0;
             els.instruction.innerHTML = `Vitamina: <span class="highlight-num">1 ${t1}</span> e <span class="highlight-num">1 ${t2}</span>`;
             
-            // Nomes seguros para arquivo (sem acento)
             const f1Safe = t1.replace(/[ãáàâ]/g, "a").replace("ç", "c").replace("ê", "e").replace("õ", "o");
             const f2Safe = t2.replace(/[ãáàâ]/g, "a").replace("ç", "c").replace("ê", "e").replace("õ", "o");
 
             if (state.justActivatedBlender) {
                 state.justActivatedBlender = false;
-                // "Vamos fazer uma vitamina" + "Vitamina de" + F1 + "com" + F2
                 playVoice(['modo_vitamina', 'vitamina_de', f1Safe, 'com', f2Safe]);
             } else {
                 playVoice(['vitamina_de', f1Safe, 'com', f2Safe]);
@@ -889,9 +873,10 @@
                 for (let [t, q] of Object.entries(state.blenderRecipe)) { if (q > 0) remaining.push(t); }
                 
                 if (remaining.length > 0) {
-                    // Toca "Falta" + Fruta
                     const fSafe = remaining[0].replace(/[ãáàâ]/g, "a").replace("ç", "c").replace("ê", "e").replace("õ", "o");
-                    playVoice(['falta', '1', fSafe]);
+                    // CORREÇÃO: "Falta UMA ..."
+                    const numAudio = getNumberAudio(1, remaining[0]);
+                    playVoice(['falta', numAudio, fSafe]);
                 }
 
                 if (Object.values(state.blenderRecipe).every(v => v === 0)) finishBlender();
