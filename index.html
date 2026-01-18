@@ -32,7 +32,7 @@
         /* --- O MONSTRO --- */
         #monster-container {
             position: absolute;
-            top: 32%; /* Ajustado levemente para cima */
+            top: 32%; 
             left: 50%;
             transform: translate(-50%, -50%);
             height: 42vh; 
@@ -98,10 +98,10 @@
         .mouth-open .mouth-path { d: path("M75 130 Q150 130 225 130 Q225 210 150 210 Q75 210 75 130 Z") !important; }
         .mouth-open .teeth { display: none; }
 
-        /* --- PRATELEIRA (MAIS ALTA AGORA) --- */
+        /* --- PRATELEIRA --- */
         #fruit-shelf {
             position: absolute;
-            bottom: calc(18% + env(safe-area-inset-bottom)); /* Subiu de 8% para 18% */
+            bottom: calc(18% + env(safe-area-inset-bottom)); 
             left: 50%;
             transform: translateX(-50%);
             width: 94%;
@@ -142,7 +142,7 @@
         /* --- LIQUIDIFICADOR --- */
         #blender-wrapper {
             position: absolute; 
-            top: 140px; /* Desceu um pouco para não bater no sidebar */
+            top: 140px; 
             right: 15px;
             width: 110px; height: 160px; 
             z-index: 60;
@@ -151,7 +151,17 @@
         
         #blender-container {
             width: 100%; height: 100%; transform-origin: center bottom;
+            position: relative;
         }
+
+        /* Container para mostrar as frutas dentro antes de bater */
+        #blender-items-visuals {
+            position: absolute;
+            top: 50px; left: 30px; width: 50px; height: 80px;
+            display: flex; flex-wrap: wrap; justify-content: center; align-content: flex-end;
+            z-index: 2; pointer-events: none;
+        }
+        .blender-fruit-tiny { width: 25px; height: 25px; margin: 1px; }
 
         .blender-ready {
             cursor: grab;
@@ -159,18 +169,18 @@
             filter: drop-shadow(0 0 15px gold);
         }
         
-        /* Sensor ampliado para facilitar o acerto das frutas */
         #blender-sensor {
             position: absolute;
             top: -20px; left: -20px;
             width: 140%; height: 140%;
-            z-index: 5;
-            /* background: rgba(0,255,0,0.2); /* Debug: descomente para ver a área */
+            z-index: 10;
         }
 
+        /* Ajuste da animação de beber: mirando na boca do monstro */
         .blender-drinking-anim {
-            transition: transform 0.8s ease-in-out !important;
-            transform: translate(calc(-50vw + 50px), 12vh) rotate(-85deg) !important; 
+            transition: transform 1s ease-in-out !important;
+            /* O cálculo agora considera a posição central e a inclinação para despejar */
+            transform: translate(calc(-50vw + 55px), -20px) rotate(-110deg) !important; 
             z-index: 200 !important;
         }
 
@@ -201,7 +211,7 @@
 
         #controls-sidebar {
             position: absolute; left: 15px; top: calc(15px + env(safe-area-inset-top));
-            display: flex; flex-direction: column; /* Coluna para evitar ocupar largura */
+            display: flex; flex-direction: column;
             gap: 12px; z-index: 60;
         }
         .control-btn {
@@ -209,7 +219,6 @@
             border: 3px solid #3498db; display: flex; justify-content: center; align-items: center;
             box-shadow: 0 4px 0 #2980b9; transition: transform 0.1s;
         }
-        .control-btn svg { width: 32px; height: 32px; }
 
         #poop-btn {
             position: absolute; top: 50%; right: 20px; transform: translateY(-50%);
@@ -224,7 +233,6 @@
             50% { transform: translateY(-50%) scale(1.1); } 
         }
 
-        /* TELA INICIAL */
         #start-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: #2ecc71; display: flex; flex-direction: column;
@@ -236,19 +244,16 @@
             box-shadow: 0 12px 0 #27ae60; font-weight: bold;
         }
 
-        /* ANIMAÇÕES SVG */
         @keyframes blink { 0%, 100% { transform: scaleY(1); } 5% { transform: scaleY(0.1); } 10% { transform: scaleY(1); } }
         .blink-anim { animation: blink 4s infinite; transform-origin: center; }
         .arm-left { animation: floatArm 2s infinite ease-in-out alternate; transform-origin: 60px 200px; }
         .arm-right { animation: floatArm 2.5s infinite ease-in-out alternate-reverse; transform-origin: 240px 200px; }
         @keyframes floatArm { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(8deg); } }
 
-        /* AJUSTES CELULARES */
         @media (max-width: 600px) {
             #monster-container { height: 38vh; top: 30%; }
             #fruit-shelf { bottom: calc(18% + env(safe-area-inset-bottom)); height: 80px; }
             .basket-item { width: 68px; height: 68px; margin-bottom: 25px; }
-            #instruction-bubble { font-size: 1.2rem; }
         }
     </style>
 </head>
@@ -303,9 +308,12 @@
         </div>
 
         <div id="blender-wrapper">
-            <div id="blender-sensor"></div> 
             <div id="blender-container">
-                <svg viewBox="0 0 140 200">
+                <!-- Visual das frutas caindo dentro -->
+                <div id="blender-items-visuals"></div>
+                
+                <div id="blender-sensor"></div> 
+                <svg viewBox="0 0 140 200" style="position:relative; z-index: 1;">
                     <path d="M20 40 L30 160 Q35 180 70 180 Q105 180 110 160 L120 40 Z" fill="rgba(200, 230, 255, 0.7)" stroke="#3498db" stroke-width="3"/>
                     <rect x="15" y="30" width="110" height="15" rx="5" fill="#333"/>
                     <rect x="25" y="180" width="90" height="20" fill="#e74c3c"/>
@@ -356,6 +364,7 @@
             blenderContainer: document.getElementById('blender-container'),
             blenderLiquid: document.getElementById('blender-liquid'),
             blenderSensor: document.getElementById('blender-sensor'),
+            blenderItems: document.getElementById('blender-items-visuals'),
             mouthSensor: document.getElementById('mouth-sensor'),
             poopBtn: document.getElementById('poop-btn'),
             gameContainer: document.getElementById('game-container'),
@@ -473,6 +482,7 @@
             state.isPlaying = true;
             state.blenderReady = false;
             els.blenderContainer.classList.remove('blender-ready');
+            els.blenderItems.innerHTML = '';
             
             const oldFruits = els.shelf.querySelectorAll('.basket-item');
             oldFruits.forEach(el => el.remove());
@@ -552,7 +562,6 @@
                     else { speak("Essa não!"); playSound('pop'); }
                 }
             } else {
-                // Liquidificador: Sensor mais generoso
                 const blenderRect = els.blenderSensor.getBoundingClientRect();
                 if (cx >= blenderRect.left && cx <= blenderRect.right && cy >= blenderRect.top && cy <= blenderRect.bottom) {
                     checkBlenderIngredient(el); dropped = true;
@@ -608,6 +617,13 @@
             const type = el.dataset.type;
             if (state.blenderRecipe[type] > 0) {
                 state.blenderRecipe[type]--;
+                
+                // Mostrar a fruta dentro do liquidificador
+                const tinyFruit = document.createElement('div');
+                tinyFruit.className = 'blender-fruit-tiny';
+                tinyFruit.innerHTML = `<svg viewBox="0 0 70 70">${fruitsData[type].shape}</svg>`;
+                els.blenderItems.appendChild(tinyFruit);
+                
                 el.remove(); playSound('pop');
                 if (Object.values(state.blenderRecipe).every(v => v === 0)) finishBlender();
             } else { 
@@ -622,6 +638,8 @@
             els.blenderContainer.style.animation = 'shake 0.5s infinite';
             setTimeout(() => {
                 els.blenderContainer.style.animation = '';
+                // Quando o líquido aparece, limpamos as frutas sólidas
+                els.blenderItems.innerHTML = '';
                 els.blenderLiquid.style.opacity = 1; 
                 state.blenderReady = true;
                 els.blenderContainer.classList.add('blender-ready');
@@ -669,7 +687,10 @@
 
         function feedMonsterJuice() {
             state.blenderReady = false;
+            // Desativa animação de pulse
+            els.blenderContainer.classList.remove('blender-ready');
             els.blenderContainer.classList.add('blender-drinking-anim');
+            
             setTimeout(() => {
                 els.blenderLiquid.style.opacity = 0;
                 playSound('eat'); speak("Hummm delícia!");
@@ -678,13 +699,14 @@
                     els.blenderWrapper.style.transform = 'none';
                     state.poopMeter += 2; startRound();
                 }, 1000);
-            }, 800);
+            }, 1000);
         }
 
         function resetBlender() {
             els.blenderWrapper.style.transform = 'none';
             els.blenderContainer.className = '';
             els.blenderLiquid.style.opacity = 0;
+            els.blenderItems.innerHTML = '';
         }
     </script>
 </body>
