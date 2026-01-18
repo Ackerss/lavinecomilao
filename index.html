@@ -7,68 +7,54 @@
     <style>
         /* --- ESTILOS GERAIS --- */
         body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
+            margin: 0; padding: 0; overflow: hidden;
             background-color: #f0f8ff;
             font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
-            touch-action: none;
-            user-select: none;
-            -webkit-user-select: none;
-            width: 100vw;
-            height: 100vh;
-            overscroll-behavior: none;
+            touch-action: none; user-select: none; -webkit-user-select: none;
+            width: 100vw; height: 100vh; overscroll-behavior: none;
         }
 
         #game-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
+            position: relative; width: 100%; height: 100%;
+            overflow: hidden; box-sizing: border-box;
             padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-            box-sizing: border-box;
         }
 
         /* --- O MONSTRO --- */
         #monster-container {
-            position: absolute;
-            top: 32%; 
-            left: 50%;
+            position: absolute; top: 32%; left: 50%;
             transform: translate(-50%, -50%);
-            height: 42vh; 
-            width: auto;
-            max-height: 400px;
-            min-height: 250px;
-            z-index: 10;
-            transition: left 0.5s ease, top 0.5s ease;
-            pointer-events: none;
-        }
-
-        #monster-svg {
-            width: 100%;
-            height: 100%;
-            display: block;
+            height: 42vh; width: auto; max-height: 400px; min-height: 250px;
+            z-index: 10; transition: all 0.5s ease; 
+            pointer-events: none; 
         }
         
-        .monster-idle { 
-            animation: breathe 3s infinite ease-in-out; 
+        /* Classe para ativar toques no monstro (Modo Carinho/Banho) */
+        .interactive {
+            pointer-events: auto !important;
+            cursor: pointer;
         }
 
+        #monster-svg { width: 100%; height: 100%; display: block; }
+        
+        .monster-idle { animation: breathe 3s infinite ease-in-out; }
         @keyframes breathe { 
             0%, 100% { transform: translate(-50%, -50%) scale(1); } 
             50% { transform: translate(-50%, -50%) scale(1.03); } 
         }
 
         #mouth-sensor {
-            position: absolute;
-            top: 35%; left: 20%; width: 60%; height: 35%; 
-            z-index: 15;
-            /* background: rgba(255,0,0,0.2); /* Debug: descomente para ver onde o liquidificador deve mirar */
+            position: absolute; top: 35%; left: 20%; width: 60%; height: 35%; 
+            z-index: 15; pointer-events: auto; /* Boca sempre interativa para comer */
         }
 
         /* --- BARRIGA --- */
         #belly-container {
-            position: absolute; top: 62%; left: 30%; width: 40%; height: 25%;
+            position: absolute; 
+            top: 71.4%; 
+            left: 50%; 
+            transform: translate(-50%, -50%);
+            width: 35%; height: 25%;
             display: flex; justify-content: center; align-items: center; z-index: 12;
             pointer-events: none;
         }
@@ -76,21 +62,22 @@
         #belly-counter {
             font-size: clamp(2.5rem, 6vh, 4.5rem);
             font-weight: bold; color: #fff; text-shadow: 3px 3px 0 #000;
-            z-index: 14; position: absolute;
+            z-index: 14; position: absolute; margin: 0; padding: 0;
+            line-height: 1;
         }
 
         #eaten-fruits-visuals {
             position: absolute; width: 100%; height: 100%;
             display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
-            opacity: 0.6; z-index: 13;
+            opacity: 0.5; z-index: 13;
         }
 
         .eaten-fruit {
             width: 25% !important; height: 25% !important; margin: 2px;
-            position: relative !important; transform: none !important; left: auto !important; top: auto !important;
+            position: relative !important; transform: none !important;
         }
 
-        /* --- ESTADOS --- */
+        /* --- ESTADOS VISUAIS DO MONSTRO --- */
         .sick-face #monster-body { fill: #a8d5ba !important; transition: fill 0.5s; }
         .sick-face .eye-pupil { transform: scale(0.5); }
         .sick-face .mouth-path { d: path("M75 150 Q110 140 150 150 Q190 160 225 150"); fill: none; stroke: #333; stroke-width: 5; }
@@ -99,40 +86,31 @@
         .mouth-open .mouth-path { d: path("M75 130 Q150 130 225 130 Q225 210 150 210 Q75 210 75 130 Z") !important; }
         .mouth-open .teeth { display: none; }
 
+        .heart-face .mouth-path { d: path("M100 160 Q150 190 200 160"); fill: none; stroke: #ff4757; stroke-width: 6; stroke-linecap: round; }
+        .heart-face .eye-pupil { display: none; }
+        .heart-face .eye-lid { d: path("M85 100 Q100 85 115 100 M185 100 Q200 85 215 100"); fill: none; stroke: #333; stroke-width: 4; }
+        #blush-group { display: none; opacity: 0.6; }
+        .heart-face #blush-group { display: block; }
+
         /* --- PRATELEIRA --- */
         #fruit-shelf {
-            position: absolute;
-            bottom: calc(18% + env(safe-area-inset-bottom)); 
-            left: 50%;
-            transform: translateX(-50%);
-            width: 94%;
-            max-width: 600px;
-            height: 90px;
-            background: #deb887;
-            border-radius: 20px;
-            border-bottom: 8px solid #cda56f;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            z-index: 50;
-            padding: 0 10px;
+            position: absolute; bottom: calc(18% + env(safe-area-inset-bottom)); 
+            left: 50%; transform: translateX(-50%);
+            width: 94%; max-width: 600px; height: 90px;
+            background: #deb887; border-radius: 20px;
+            border-bottom: 8px solid #cda56f; box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            display: flex; justify-content: space-around; align-items: center;
+            z-index: 50; padding: 0 10px;
         }
 
-        .shelf-support {
-            position: absolute; top: 100%; width: 18px; height: 100vh; background: #cda56f; z-index: 40;
-        }
+        .shelf-support { position: absolute; top: 100%; width: 18px; height: 100vh; background: #cda56f; z-index: 40; }
         .support-left { left: 40px; }
         .support-right { right: 40px; }
 
         .basket-item {
-            width: 75px; height: 75px;
-            position: relative; cursor: grab;
-            transition: transform 0.1s;
-            margin-bottom: 35px; 
-            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.2));
-            z-index: 55;
-            touch-action: none;
+            width: 75px; height: 75px; position: relative; cursor: grab;
+            transition: transform 0.1s; margin-bottom: 35px; 
+            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.2)); z-index: 55; touch-action: none;
         }
 
         .fruit-drag {
@@ -142,79 +120,74 @@
 
         /* --- LIQUIDIFICADOR --- */
         #blender-wrapper {
-            position: absolute; 
-            top: 140px; 
-            right: 15px;
-            width: 110px; height: 160px; 
-            z-index: 60;
-            display: none; touch-action: none; 
-            /* Importante para a transição funcionar bem via JS */
-            transform-origin: center center; 
+            position: absolute; top: 140px; right: 15px;
+            width: 110px; height: 160px; z-index: 60;
+            display: none; touch-action: none; transform-origin: center center; 
         }
-        
-        #blender-container {
-            width: 100%; height: 100%; transform-origin: center bottom;
-            position: relative;
-        }
-
-        /* Container para mostrar as frutas dentro antes de bater */
+        #blender-container { width: 100%; height: 100%; transform-origin: center bottom; position: relative; }
         #blender-items-visuals {
-            position: absolute;
-            top: 50px; left: 30px; width: 50px; height: 80px;
+            position: absolute; top: 50px; left: 30px; width: 50px; height: 80px;
             display: flex; flex-wrap: wrap; justify-content: center; align-content: flex-end;
             z-index: 2; pointer-events: none;
         }
         .blender-fruit-tiny { width: 25px; height: 25px; margin: 1px; }
+        .blender-ready { cursor: grab; animation: shake 0.3s infinite; filter: drop-shadow(0 0 15px gold); }
+        #blender-sensor { position: absolute; top: -20px; left: -20px; width: 140%; height: 140%; z-index: 10; }
 
-        .blender-ready {
-            cursor: grab;
-            animation: pulse-ready 1s infinite;
-            filter: drop-shadow(0 0 15px gold);
+        /* --- SPONGE (BANHO) --- */
+        #sponge-cursor {
+            position: fixed; width: 60px; height: 60px;
+            background: #f1c40f; border-radius: 10px;
+            border: 3px solid #e67e22;
+            pointer-events: none; z-index: 9999; display: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
-        
-        #blender-sensor {
-            position: absolute;
-            top: -20px; left: -20px;
-            width: 140%; height: 140%;
-            z-index: 10;
+        /* Poros da esponja */
+        #sponge-cursor::after {
+            content: ".:"; color: #d35400; font-size: 20px; font-weight: bold;
+            position: absolute; top: 5px; left: 10px;
         }
-
-        /* --- EFEITOS --- */
-        .poop-drop {
-            position: absolute; font-size: 85px; z-index: 5;
-            animation: dropPoop 2.2s forwards; 
-            left: 50%;
-        }
-
-        @keyframes dropPoop { 
-            0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; } 
-            15% { opacity: 1; transform: translate(-50%, 60px) scale(1.1); } 
-            100% { transform: translate(-50%, 100vh) scale(1); opacity: 1; } 
+        #sponge-cursor::before {
+            content: "o"; color: #d35400; font-size: 15px;
+            position: absolute; bottom: 10px; right: 10px;
         }
 
-        /* --- UI --- */
-        #ui-layer { 
-            position: absolute; top: calc(10px + env(safe-area-inset-top));
-            width: 100%; text-align: center; z-index: 20; pointer-events: none; 
+        /* --- PARTICULAS --- */
+        .heart-particle {
+            position: absolute; pointer-events: none; z-index: 100;
+            animation: floatUp 1.5s forwards ease-out; font-size: 30px;
         }
-        #instruction-bubble {
-            background: white; padding: 10px 25px; border-radius: 50px; display: inline-block;
-            border: 4px solid #333; font-size: 1.4rem; box-shadow: 0 6px 0 rgba(0,0,0,0.15); 
-            max-width: 80%;
+        .bubble-particle {
+            position: absolute; pointer-events: none; z-index: 100;
+            width: 20px; height: 20px; background: rgba(255,255,255,0.6);
+            border: 1px solid white; border-radius: 50%;
+            animation: floatUp 2s forwards ease-in;
         }
-        .highlight-num { color: #e74c3c; font-weight: bold; font-size: 1.7rem; }
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(0.5); opacity: 1; }
+            100% { transform: translateY(-200px) scale(1.5); opacity: 0; }
+        }
 
+        /* --- UI E BOTÕES --- */
         #controls-sidebar {
-            position: absolute; left: 15px; 
-            /* BOTÕES MAIS BAIXOS: Aumentei o Top para 100px para sair de cima do texto */
-            top: calc(100px + env(safe-area-inset-top));
-            display: flex; flex-direction: column;
-            gap: 12px; z-index: 60;
+            position: absolute; left: 15px; top: calc(100px + env(safe-area-inset-top));
+            display: flex; flex-direction: column; gap: 15px; z-index: 60;
         }
         .control-btn {
-            width: 55px; height: 55px; background: white; border-radius: 50%;
-            border: 3px solid #3498db; display: flex; justify-content: center; align-items: center;
-            box-shadow: 0 4px 0 #2980b9; transition: transform 0.1s;
+            width: 65px; height: 65px; background: white; border-radius: 20px;
+            border: 4px solid #3498db; display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 6px 0 #2980b9; transition: all 0.1s; cursor: pointer;
+            pointer-events: auto;
+        }
+        .control-btn:active { transform: translateY(3px); box-shadow: 0 3px 0 #2980b9; }
+
+        .btn-active {
+            background: #ffeaa7 !important; border-color: #f1c40f !important;
+            box-shadow: 0 6px 0 #f39c12 !important; animation: pulse-active 1.5s infinite;
+        }
+        @keyframes pulse-active { 
+            0%, 100% { transform: scale(1); } 
+            50% { transform: scale(1.08); } 
         }
 
         #poop-btn {
@@ -225,10 +198,20 @@
             box-shadow: 0 8px 20px rgba(0,0,0,0.25);
         }
 
-        @keyframes pulse-btn { 
-            0%, 100% { transform: translateY(-50%) scale(1); } 
-            50% { transform: translateY(-50%) scale(1.1); } 
+        @keyframes dropPoop { 
+            0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; } 
+            15% { opacity: 1; transform: translate(-50%, 60px) scale(1.1); } 
+            100% { transform: translate(-50%, 100vh) scale(1); opacity: 1; } 
         }
+        .poop-drop { position: absolute; font-size: 85px; z-index: 5; animation: dropPoop 2.2s forwards; left: 50%; }
+
+        #instruction-bubble {
+            background: white; padding: 10px 25px; border-radius: 50px; display: inline-block;
+            border: 4px solid #333; font-size: 1.4rem; box-shadow: 0 6px 0 rgba(0,0,0,0.15); 
+            max-width: 80%;
+        }
+        #ui-layer { position: absolute; top: calc(10px + env(safe-area-inset-top)); width: 100%; text-align: center; z-index: 20; pointer-events: none; }
+        .highlight-num { color: #e74c3c; font-weight: bold; font-size: 1.7rem; }
 
         #start-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -239,18 +222,6 @@
             background: #fff; color: #2ecc71; border: none; padding: 25px 80px;
             font-size: 2.5rem; border-radius: 60px; cursor: pointer;
             box-shadow: 0 12px 0 #27ae60; font-weight: bold;
-        }
-
-        @keyframes blink { 0%, 100% { transform: scaleY(1); } 5% { transform: scaleY(0.1); } 10% { transform: scaleY(1); } }
-        .blink-anim { animation: blink 4s infinite; transform-origin: center; }
-        .arm-left { animation: floatArm 2s infinite ease-in-out alternate; transform-origin: 60px 200px; }
-        .arm-right { animation: floatArm 2.5s infinite ease-in-out alternate-reverse; transform-origin: 240px 200px; }
-        @keyframes floatArm { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(8deg); } }
-
-        @media (max-width: 600px) {
-            #monster-container { height: 38vh; top: 30%; }
-            #fruit-shelf { bottom: calc(18% + env(safe-area-inset-bottom)); height: 80px; }
-            .basket-item { width: 68px; height: 68px; margin-bottom: 25px; }
         }
     </style>
 </head>
@@ -263,12 +234,36 @@
         <p style="color:white; margin-top:40px; font-weight:bold; font-size: 1.3rem;">Para a Lavine ❤️</p>
     </div>
 
+    <!-- Cursor Esponja -->
+    <div id="sponge-cursor"></div>
+
     <div id="controls-sidebar">
-        <div id="btn-blender" class="control-btn" onclick="toggleBlenderMode()">
-            <svg viewBox="0 0 24 24"><path d="M19,19H5V8H19M19,8V6A2,2 0 0,0 17,4H7A2,2 0 0,0 5,6V8M19,19A2,2 0 0,1 17,21H7A2,2 0 0,1 5,19M9,13H15" fill="#333"/></svg>
+        <!-- Botão Liquidificador -->
+        <div id="btn-blender" class="control-btn" onclick="setMode('blender')" title="Modo Vitamina">
+            <svg viewBox="0 0 100 100" width="45" height="45">
+                <rect x="25" y="75" width="50" height="15" rx="5" fill="#333" />
+                <path d="M30 20 L70 20 L65 75 L35 75 Z" fill="#81ecec" stroke="#333" stroke-width="3"/>
+                <rect x="28" y="12" width="44" height="8" rx="2" fill="#e74c3c" />
+                <circle cx="50" cy="82" r="4" fill="#f1c40f" />
+            </svg>
         </div>
-        <div id="btn-color" class="control-btn" onclick="toggleColor()">
-            <svg viewBox="0 0 24 24"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z" fill="#333" /></svg>
+        <!-- Botão Carinho -->
+        <div id="btn-heart" class="control-btn" onclick="setMode('heart')" title="Modo Carinho">
+            <span style="font-size: 35px;">❤️</span>
+        </div>
+        <!-- Botão Banho (NOVO) -->
+        <div id="btn-bath" class="control-btn" onclick="setMode('bath')" title="Modo Banho">
+            <svg viewBox="0 0 100 100" width="45" height="45">
+                <path d="M20 80 Q20 40 50 40 Q80 40 80 80" fill="none" stroke="#3498db" stroke-width="4" />
+                <rect x="30" y="20" width="40" height="20" rx="5" fill="#95a5a6" />
+                <line x1="35" y1="40" x2="35" y2="55" stroke="#3498db" stroke-width="3" stroke-dasharray="5,3" />
+                <line x1="50" y1="40" x2="50" y2="60" stroke="#3498db" stroke-width="3" stroke-dasharray="5,3" />
+                <line x1="65" y1="40" x2="65" y2="55" stroke="#3498db" stroke-width="3" stroke-dasharray="5,3" />
+            </svg>
+        </div>
+        <!-- Botão Cor -->
+        <div id="btn-color" class="control-btn" onclick="toggleColor()" title="Trocar Cor">
+            <svg viewBox="0 0 24 24" width="35" height="35"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z" fill="#333" /></svg>
         </div>
     </div>
 
@@ -283,6 +278,7 @@
 
         <div id="monster-container" class="monster-idle">
             <div id="mouth-sensor"></div>
+            
             <div id="belly-container">
                 <div id="eaten-fruits-visuals"></div>
                 <div id="belly-counter"></div>
@@ -291,9 +287,23 @@
             <svg id="monster-svg" viewBox="0 0 300 350" preserveAspectRatio="xMidYMid meet">
                 <path id="monster-body" d="M50 300 Q20 350 80 340 L220 340 Q280 350 250 300 Q280 200 250 100 Q230 20 150 20 Q70 20 50 100 Q20 200 50 300" fill="#7bed9f" stroke="#2ecc71" stroke-width="5"/>
                 <circle cx="150" cy="250" r="60" fill="rgba(255,255,255,0.4)" stroke="#fff" stroke-width="3" />
+                
+                <g id="blush-group">
+                    <circle cx="90" cy="180" r="15" fill="#ff7675" />
+                    <circle cx="210" cy="180" r="15" fill="#ff7675" />
+                </g>
+
                 <g id="eyes">
-                    <g class="blink-anim"><circle cx="100" cy="100" r="25" fill="white" stroke="#333" stroke-width="2"/><circle class="eye-pupil" id="eye-left" cx="100" cy="100" r="10" fill="black" /></g>
-                    <g class="blink-anim" style="animation-delay: 0.15s;"><circle cx="200" cy="100" r="25" fill="white" stroke="#333" stroke-width="2"/><circle class="eye-pupil" id="eye-right" cx="200" cy="100" r="10" fill="black" /></g>
+                    <g class="blink-anim">
+                        <circle cx="100" cy="100" r="25" fill="white" stroke="#333" stroke-width="2"/>
+                        <circle class="eye-pupil" cx="100" cy="100" r="10" fill="black" />
+                        <path class="eye-lid" d="" />
+                    </g>
+                    <g class="blink-anim" style="animation-delay: 0.15s;">
+                        <circle cx="200" cy="100" r="25" fill="white" stroke="#333" stroke-width="2"/>
+                        <circle class="eye-pupil" cx="200" cy="100" r="10" fill="black" />
+                        <path class="eye-lid" d="" />
+                    </g>
                 </g>
                 <g id="mouth-group">
                     <path class="mouth-path" d="M75 130 Q150 130 225 130 Q225 180 150 180 Q75 180 75 130 Z" fill="#333" />
@@ -306,9 +316,7 @@
 
         <div id="blender-wrapper">
             <div id="blender-container">
-                <!-- Visual das frutas caindo dentro -->
                 <div id="blender-items-visuals"></div>
-                
                 <div id="blender-sensor"></div> 
                 <svg viewBox="0 0 140 200" style="position:relative; z-index: 1;">
                     <path d="M20 40 L30 160 Q35 180 70 180 Q105 180 110 160 L120 40 Z" fill="rgba(200, 230, 255, 0.7)" stroke="#3498db" stroke-width="3"/>
@@ -346,8 +354,9 @@
 
         let state = {
             mode: 'normal', targetCount: 0, eatenCount: 0, targetType: '',
-            blenderRecipe: {}, blenderContent: [], blenderReady: false, 
-            poopMeter: 0, isPlaying: false, needsPoop: false, activeDrag: null
+            blenderRecipe: {}, blenderReady: false, 
+            poopMeter: 0, isPlaying: false, needsPoop: false, activeDrag: null,
+            justActivatedBlender: false, lastSoundTime: 0
         };
 
         const MAX_POOP = 6;
@@ -366,7 +375,10 @@
             poopBtn: document.getElementById('poop-btn'),
             gameContainer: document.getElementById('game-container'),
             btnBlender: document.getElementById('btn-blender'),
-            shelf: document.getElementById('fruit-shelf') 
+            btnHeart: document.getElementById('btn-heart'),
+            btnBath: document.getElementById('btn-bath'),
+            shelf: document.getElementById('fruit-shelf'),
+            sponge: document.getElementById('sponge-cursor')
         };
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -380,10 +392,15 @@
 
         function playSound(type) {
             if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            // Debounce for simple sounds to avoid noise storm
+            const now = audioCtx.currentTime;
+            if (type === 'water' && now - state.lastSoundTime < 0.15) return;
+            state.lastSoundTime = now;
+
             const osc = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
             osc.connect(gainNode); gainNode.connect(audioCtx.destination);
-            const now = audioCtx.currentTime;
 
             if (type === 'eat') {
                 osc.type = 'triangle'; osc.frequency.setValueAtTime(300, now);
@@ -395,6 +412,19 @@
                 osc.frequency.exponentialRampToValueAtTime(40, now + 0.5);
                 gainNode.gain.setValueAtTime(0.4, now); gainNode.gain.linearRampToValueAtTime(0, now + 0.5);
                 osc.start(); osc.stop(now + 0.5);
+            } else if (type === 'heart') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(523.25, now);
+                osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.2);
+                gainNode.gain.setValueAtTime(0.3, now); gainNode.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start(); osc.stop(now + 0.3);
+            } else if (type === 'water') {
+                // Bubbling sound
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400 + Math.random() * 200, now);
+                osc.frequency.linearRampToValueAtTime(800 + Math.random() * 200, now + 0.1);
+                gainNode.gain.setValueAtTime(0.1, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+                osc.start(); osc.stop(now + 0.1);
             } else {
                 osc.type = 'sine'; osc.frequency.setValueAtTime(600, now);
                 gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
@@ -406,6 +436,7 @@
             document.getElementById('start-screen').style.display = 'none';
             if (audioCtx.state === 'suspended') audioCtx.resume();
             setupBlenderDrag();
+            setupInteractionEvents();
             startRound();
         }
 
@@ -423,8 +454,7 @@
         function checkPoopStatus() {
             if (state.poopMeter >= MAX_POOP) {
                 state.needsPoop = true;
-                els.monster.classList.add('sick-face');
-                els.monster.classList.remove('monster-idle'); 
+                els.monster.className = 'sick-face';
                 els.instruction.innerHTML = "Ai minha barriga!";
                 speak("Ai ai ai, minha barriga! me ajude aliviar");
                 els.poopBtn.style.display = 'flex';
@@ -440,18 +470,15 @@
             const poopVisual = document.createElement('div');
             poopVisual.innerHTML = '💩';
             poopVisual.className = 'poop-drop';
-            
             const mRect = els.monster.getBoundingClientRect();
             poopVisual.style.left = (mRect.left + mRect.width/2) + 'px'; 
             poopVisual.style.top = (mRect.bottom - 40) + 'px'; 
-            
             els.gameContainer.appendChild(poopVisual);
             setTimeout(() => poopVisual.remove(), 2500);
 
             state.poopMeter = 0; state.needsPoop = false;
             els.poopBtn.style.display = 'none';
-            els.monster.classList.remove('sick-face');
-            els.monster.classList.add('monster-idle');
+            els.monster.className = 'monster-idle';
             els.shelf.style.opacity = '1';
             els.shelf.style.pointerEvents = 'auto';
             speak("Ufa! Melhorou!");
@@ -460,18 +487,157 @@
             setTimeout(startRound, 2500);
         }
 
-        function toggleBlenderMode() {
+        function clearModeVisuals() {
+            // Limpa tudo de todos os modos
+            els.btnHeart.classList.remove('btn-active');
+            els.btnBlender.classList.remove('btn-active');
+            els.btnBath.classList.remove('btn-active');
+            
+            els.monster.classList.remove('heart-face');
+            els.monster.classList.remove('interactive');
+            
+            els.blenderWrapper.style.display = 'none';
+            resetBlender();
+            
+            els.sponge.style.display = 'none';
+            
+            // Restaura prateleira por padrão
+            els.shelf.style.opacity = '1';
+            els.shelf.style.pointerEvents = 'auto';
+        }
+
+        function setMode(newMode) {
             if (state.needsPoop) return;
-            state.mode = (state.mode === 'normal') ? 'blender' : 'normal';
+
+            // Se clicou no mesmo modo, volta ao normal
+            if (state.mode === newMode) {
+                state.mode = 'normal';
+                clearModeVisuals();
+                startRound();
+                return;
+            }
+
+            // Limpa e seta novo modo
+            clearModeVisuals();
+            state.mode = newMode;
+
+            // Configura visual do novo modo
             if (state.mode === 'blender') {
                 els.blenderWrapper.style.display = 'block';
-                els.btnBlender.style.background = '#ffeaa7';
-            } else {
-                els.blenderWrapper.style.display = 'none';
-                els.btnBlender.style.background = 'white';
-                resetBlender();
+                els.btnBlender.classList.add('btn-active');
+                state.justActivatedBlender = true;
+                startRound();
+            } 
+            else if (state.mode === 'heart') {
+                els.btnHeart.classList.add('btn-active');
+                els.monster.classList.add('heart-face');
+                els.monster.classList.add('interactive'); // Ativa o click no corpo
+                els.instruction.innerHTML = "Dê carinho no monstro!";
+                speak("Ah, eu quero carinho!");
+                hideShelf();
+            } 
+            else if (state.mode === 'bath') {
+                els.btnBath.classList.add('btn-active');
+                els.monster.classList.add('interactive'); // Ativa o drag no corpo
+                els.instruction.innerHTML = "Hora do banho!";
+                speak("Vamos ficar limpinhos!");
+                els.sponge.style.display = 'block';
+                hideShelf();
+            } 
+            else {
+                startRound();
             }
-            startRound();
+        }
+
+        function hideShelf() {
+            els.shelf.style.opacity = '0.3';
+            els.shelf.style.pointerEvents = 'none';
+            const oldFruits = els.shelf.querySelectorAll('.basket-item');
+            oldFruits.forEach(el => el.remove());
+        }
+
+        // --- INTERAÇÕES UNIFICADAS (BANHO E CARINHO) ---
+        function setupInteractionEvents() {
+            const container = document.getElementById('game-container');
+            const bathPhrases = ["Xô sujeira!", "Lavando a barriga!", "Que cheirinho bom!", "Esfrega, esfrega!", "Tchibum!", "Lavando o pé!"];
+
+            // Evento de "CLICK/TOUCHSTART" para CARINHO (1 toque = 1 coração)
+            const handleTap = (e) => {
+                if (state.mode !== 'heart') return;
+                // Impede múltiplos disparos se for touch
+                if(e.type === 'touchstart') e.preventDefault(); 
+
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                
+                // Verifica se tocou no monstro
+                const mRect = els.monster.getBoundingClientRect();
+                if (clientX >= mRect.left && clientX <= mRect.right && 
+                    clientY >= mRect.top && clientY <= mRect.bottom) {
+                    
+                    createParticle(clientX, clientY, 'heart');
+                    playSound('heart');
+                    // Frases de carinho aleatórias
+                    if(Math.random() > 0.7) speak(["Obrigado!", "Meu amigo!", "Gostoso!", "Te amo!"][Math.floor(Math.random()*4)]);
+                }
+            };
+
+            // Evento de "MOVE" para BANHO (arrastar = bolhas)
+            const handleMove = (e) => {
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+                // Move a esponja se estiver no modo banho
+                if (state.mode === 'bath') {
+                    els.sponge.style.left = (clientX - 30) + 'px';
+                    els.sponge.style.top = (clientY - 30) + 'px';
+
+                    // Se estiver sobre o monstro e "apertando" (mousedown ou touchmove)
+                    const isTouching = (e.type === 'touchmove') || (e.buttons === 1);
+                    if (!isTouching) return;
+
+                    const mRect = els.monster.getBoundingClientRect();
+                    if (clientX >= mRect.left && clientX <= mRect.right && 
+                        clientY >= mRect.top && clientY <= mRect.bottom) {
+                        
+                        // Cria bolha com throttle via requestAnimationFrame implícito (ou apenas chance aleatória para não travar)
+                        if (Math.random() > 0.8) {
+                            createParticle(clientX, clientY, 'bubble');
+                            playSound('water');
+                        }
+                        
+                        // Frases aleatórias de banho (raras)
+                        if (Math.random() > 0.99) {
+                            speak(bathPhrases[Math.floor(Math.random() * bathPhrases.length)]);
+                        }
+                    }
+                }
+            };
+
+            // Listeners para Carinho (Apenas Tap)
+            els.monster.addEventListener('mousedown', handleTap);
+            els.monster.addEventListener('touchstart', handleTap, {passive: false});
+
+            // Listeners para Banho (Movimento Global para esponja seguir)
+            container.addEventListener('mousemove', handleMove);
+            container.addEventListener('touchmove', handleMove, {passive: false});
+        }
+
+        function createParticle(x, y, type) {
+            const p = document.createElement('div');
+            p.className = type === 'heart' ? 'heart-particle' : 'bubble-particle';
+            
+            if (type === 'heart') {
+                p.innerHTML = ['❤️','💖','✨','💕'][Math.floor(Math.random()*4)];
+            }
+            
+            // Pequena variação na posição
+            const randX = (Math.random() - 0.5) * 40;
+            p.style.left = (x + randX) + 'px';
+            p.style.top = y + 'px';
+            
+            els.gameContainer.appendChild(p);
+            setTimeout(() => p.remove(), 2000);
         }
 
         function startRound() {
@@ -485,7 +651,7 @@
             oldFruits.forEach(el => el.remove());
 
             if (state.mode === 'normal') setupNormalRound();
-            else setupBlenderRound();
+            else if (state.mode === 'blender') setupBlenderRound();
         }
 
         function fillBasket(requiredTypes) {
@@ -496,7 +662,6 @@
                 if(!options.includes(randomType)) options.push(randomType);
             }
             options.sort(() => Math.random() - 0.5);
-            
             options.forEach(type => {
                 const item = document.createElement('div');
                 item.className = 'basket-item';
@@ -518,7 +683,6 @@
             dragEl.className = 'fruit-drag';
             dragEl.dataset.type = type;
             dragEl.innerHTML = `<svg viewBox="0 0 70 70">${fruitsData[type].shape}</svg>`;
-            
             dragEl.style.left = (touch.clientX - 45) + 'px';
             dragEl.style.top = (touch.clientY - 45) + 'px';
             els.gameContainer.appendChild(dragEl);
@@ -530,7 +694,6 @@
                 state.activeDrag.style.left = (mt.clientX - 45) + 'px';
                 state.activeDrag.style.top = (mt.clientY - 45) + 'px';
             };
-            
             const endHandler = () => {
                 document.removeEventListener('mousemove', moveHandler);
                 document.removeEventListener('mouseup', endHandler);
@@ -539,7 +702,6 @@
                 els.monster.classList.remove('mouth-open');
                 if (state.activeDrag) { checkDrop(state.activeDrag); state.activeDrag = null; }
             };
-            
             document.addEventListener('mousemove', moveHandler);
             document.addEventListener('mouseup', endHandler);
             document.addEventListener('touchmove', moveHandler, {passive: false});
@@ -558,7 +720,7 @@
                     if (el.dataset.type === state.targetType) { eatFruitNormal(el); dropped = true; }
                     else { speak("Essa não!"); playSound('pop'); }
                 }
-            } else {
+            } else if (state.mode === 'blender') {
                 const blenderRect = els.blenderSensor.getBoundingClientRect();
                 if (cx >= blenderRect.left && cx <= blenderRect.right && cy >= blenderRect.top && cy <= blenderRect.bottom) {
                     checkBlenderIngredient(el); dropped = true;
@@ -591,12 +753,9 @@
             playSound('eat');
             state.targetCount--; state.eatenCount++;
             els.bellyCounter.innerText = state.eatenCount;
-            
-            // FALA O NÚMERO
             speak(state.eatenCount.toString());
-            
             if (state.targetCount <= 0) {
-                setTimeout(() => speak("Delícia!"), 1000); // Fala delícia depois do número
+                setTimeout(() => speak("Delícia!"), 1000);
                 state.poopMeter++; state.isPlaying = false; setTimeout(startRound, 2500);
             }
         }
@@ -607,10 +766,17 @@
             let t2 = types[Math.floor(Math.random()*types.length)];
             while(t1===t2) t2 = types[Math.floor(Math.random()*types.length)];
             state.blenderRecipe = { [t1]: 1, [t2]: 1 };
-            state.blenderContent = [];
             els.blenderLiquid.style.opacity = 0;
             els.instruction.innerHTML = `Vitamina: <span class="highlight-num">1 ${t1}</span> e <span class="highlight-num">1 ${t2}</span>`;
-            speak(`Vitamina de ${t1} com ${t2}.`);
+            
+            // Lógica da narração inicial
+            let speechText = `Vitamina de ${t1} com ${t2}.`;
+            if (state.justActivatedBlender) {
+                speechText = "Vamos fazer uma vitamina! " + speechText;
+                state.justActivatedBlender = false;
+            }
+            speak(speechText);
+            
             fillBasket([t1, t2]);
         }
 
@@ -618,23 +784,15 @@
             const type = el.dataset.type;
             if (state.blenderRecipe[type] > 0) {
                 state.blenderRecipe[type]--;
-                
                 const tinyFruit = document.createElement('div');
                 tinyFruit.className = 'blender-fruit-tiny';
                 tinyFruit.innerHTML = `<svg viewBox="0 0 70 70">${fruitsData[type].shape}</svg>`;
                 els.blenderItems.appendChild(tinyFruit);
-                
                 el.remove(); playSound('pop');
                 
-                // Lógica para narrar o que falta
                 const remaining = [];
-                for (let [t, q] of Object.entries(state.blenderRecipe)) {
-                    if (q > 0) remaining.push(`${q} ${t}`);
-                }
-                if (remaining.length > 0) {
-                    speak("Falta " + remaining.join(" e "));
-                }
-
+                for (let [t, q] of Object.entries(state.blenderRecipe)) { if (q > 0) remaining.push(`${q} ${t}`); }
+                if (remaining.length > 0) speak("Falta " + remaining.join(" e "));
                 if (Object.values(state.blenderRecipe).every(v => v === 0)) finishBlender();
             } else { 
                 speak("Essa não!"); 
@@ -645,13 +803,11 @@
 
         function finishBlender() {
             els.instruction.innerHTML = "Misturando...";
-            els.blenderContainer.style.animation = 'shake 0.5s infinite';
+            els.blenderContainer.classList.add('blender-ready');
             setTimeout(() => {
-                els.blenderContainer.style.animation = '';
                 els.blenderItems.innerHTML = '';
                 els.blenderLiquid.style.opacity = 1; 
                 state.blenderReady = true;
-                els.blenderContainer.classList.add('blender-ready');
                 els.instruction.innerHTML = "Dê para o monstro!";
                 speak("Dá pra mim!");
             }, 1500);
@@ -660,14 +816,12 @@
         function setupBlenderDrag() {
             let startX, startY;
             const wrapper = els.blenderWrapper; 
-
             function onStart(e) {
                 if (!state.blenderReady) return;
                 e.preventDefault(); 
                 const touch = e.type === 'touchstart' ? e.touches[0] : e;
                 startX = touch.clientX; startY = touch.clientY;
                 wrapper.style.zIndex = 1000;
-
                 function onMove(me) {
                     const mt = me.type === 'touchmove' ? me.touches[0] : me;
                     wrapper.style.transform = `translate(${mt.clientX - startX}px, ${mt.clientY - startY}px)`;
@@ -676,7 +830,6 @@
                     if (bRect.left < mRect.right && bRect.right > mRect.left && bRect.top < mRect.bottom) els.monster.classList.add('mouth-open');
                     else els.monster.classList.remove('mouth-open');
                 }
-
                 function onEnd() {
                     document.removeEventListener('mousemove', onMove);
                     document.removeEventListener('mouseup', onEnd);
@@ -697,32 +850,12 @@
         function feedMonsterJuice() {
             state.blenderReady = false;
             els.blenderContainer.classList.remove('blender-ready');
-            
-            // 1. Calcular a posição do liquidificador dinamicamente para cair EXATAMENTE na boca
             const mRect = els.mouthSensor.getBoundingClientRect();
             const bRect = els.blenderWrapper.getBoundingClientRect();
-            
-            // Centro da boca
-            const mCenterX = mRect.left + mRect.width / 2;
-            const mCenterY = mRect.top + mRect.height / 2;
-            
-            // Centro atual do liquidificador
-            const bCenterX = bRect.left + bRect.width / 2;
-            const bCenterY = bRect.top + bRect.height / 2;
-            
-            // Offset manual:
-            // Queremos que o liquidificador fique um pouco acima da boca para "virar" o suco.
-            // A rotação de -100deg faz o topo ir para a esquerda/baixo.
-            const offsetX = -20; 
-            const offsetY = -40; // Sobe um pouco
-            
-            const moveX = (mCenterX - bCenterX) + offsetX;
-            const moveY = (mCenterY - bCenterY) + offsetY;
-
-            // Aplica a transformação via estilo inline (mais preciso que CSS classes)
+            const moveX = (mRect.left + mRect.width/2 - (bRect.left + bRect.width/2)) - 20;
+            const moveY = (mRect.top + mRect.height/2 - (bRect.top + bRect.height/2)) - 40;
             els.blenderWrapper.style.transition = 'transform 1s ease-in-out';
             els.blenderWrapper.style.transform = `translate(${moveX}px, ${moveY}px) rotate(-100deg)`;
-            
             setTimeout(() => {
                 els.blenderLiquid.style.opacity = 0;
                 playSound('eat'); speak("Hummm delícia!");
@@ -736,7 +869,7 @@
 
         function resetBlender() {
             els.blenderWrapper.style.transform = 'none';
-            els.blenderContainer.className = '';
+            els.blenderContainer.classList.remove('blender-ready');
             els.blenderLiquid.style.opacity = 0;
             els.blenderItems.innerHTML = '';
         }
