@@ -356,7 +356,7 @@
             mode: 'normal', targetCount: 0, eatenCount: 0, targetType: '',
             blenderRecipe: {}, blenderReady: false, 
             poopMeter: 0, isPlaying: false, needsPoop: false, activeDrag: null,
-            justActivatedBlender: false, lastSoundTime: 0
+            justActivatedBlender: false, lastSoundTime: 0, lastAmbientSpeechTime: 0
         };
 
         const MAX_POOP = 6;
@@ -383,8 +383,14 @@
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-        function speak(text) {
-            window.speechSynthesis.cancel();
+        // Função de fala melhorada com controle de "ambiente"
+        function speak(text, isAmbient = false) {
+            // Se for uma fala de ambiente (banho/carinho) e falou recentemente, ignora para não encavalar
+            if (isAmbient && (Date.now() - state.lastAmbientSpeechTime < 2000)) return; 
+            
+            if (isAmbient) state.lastAmbientSpeechTime = Date.now();
+
+            window.speechSynthesis.cancel(); // Cancela a anterior para priorizar a nova (se passou do filtro)
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'pt-BR'; utterance.rate = 1.1; utterance.pitch = 1.2; 
             window.speechSynthesis.speak(utterance);
@@ -559,7 +565,7 @@
         // --- INTERAÇÕES UNIFICADAS (BANHO E CARINHO) ---
         function setupInteractionEvents() {
             const container = document.getElementById('game-container');
-            const bathPhrases = ["Xô sujeira!", "Lavando a barriga!", "Que cheirinho bom!", "Esfrega, esfrega!", "Tchibum!", "Lavando o pé!"];
+            const bathPhrases = ["Xô sujeira!", "Lavando a barriga!", "Que cheirinho bom!", "Esfrega, esfrega!", "Obrigado, fiquei limpinho!", "Tchibum!"];
 
             // Evento de "CLICK/TOUCHSTART" para CARINHO (1 toque = 1 coração)
             const handleTap = (e) => {
@@ -578,7 +584,8 @@
                     createParticle(clientX, clientY, 'heart');
                     playSound('heart');
                     // Frases de carinho aleatórias
-                    if(Math.random() > 0.7) speak(["Obrigado!", "Meu amigo!", "Gostoso!", "Te amo!"][Math.floor(Math.random()*4)]);
+                    // Agora usa o parâmetro isAmbient=true para controlar sobreposição
+                    if(Math.random() > 0.7) speak(["Obrigado!", "Meu amigo!", "Gostoso!", "Te amo!"][Math.floor(Math.random()*4)], true);
                 }
             };
 
@@ -606,9 +613,9 @@
                             playSound('water');
                         }
                         
-                        // Frases aleatórias de banho (raras)
-                        if (Math.random() > 0.99) {
-                            speak(bathPhrases[Math.floor(Math.random() * bathPhrases.length)]);
+                        // Frases aleatórias de banho - Aumentei a chance, mas o filtro de tempo controla a fala real
+                        if (Math.random() > 0.95) {
+                            speak(bathPhrases[Math.floor(Math.random() * bathPhrases.length)], true);
                         }
                     }
                 }
@@ -754,8 +761,13 @@
             state.targetCount--; state.eatenCount++;
             els.bellyCounter.innerText = state.eatenCount;
             speak(state.eatenCount.toString());
+            
             if (state.targetCount <= 0) {
-                setTimeout(() => speak("Delícia!"), 1000);
+                // Frases educadas finais
+                const politeEndings = ["Obrigado, estava ótimo!", "Barriga cheia, obrigado!", "Hummm, obrigado!", "Delícia, obrigado!"];
+                const phrase = politeEndings[Math.floor(Math.random() * politeEndings.length)];
+                
+                setTimeout(() => speak(phrase), 1000);
                 state.poopMeter++; state.isPlaying = false; setTimeout(startRound, 2500);
             }
         }
@@ -858,7 +870,11 @@
             els.blenderWrapper.style.transform = `translate(${moveX}px, ${moveY}px) rotate(-100deg)`;
             setTimeout(() => {
                 els.blenderLiquid.style.opacity = 0;
-                playSound('eat'); speak("Hummm delícia!");
+                playSound('eat'); 
+                
+                // Frase educada vitamina
+                speak("Hummm, obrigado! Delícia!");
+                
                 setTimeout(() => {
                     els.blenderWrapper.style.transition = 'transform 0.5s ease';
                     els.blenderWrapper.style.transform = 'none';
