@@ -763,11 +763,8 @@
             speak(state.eatenCount.toString());
             
             if (state.targetCount <= 0) {
-                // Frases educadas finais
-                const politeEndings = ["Obrigado, estava ótimo!", "Barriga cheia, obrigado!", "Hummm, obrigado!", "Delícia, obrigado!"];
-                const phrase = politeEndings[Math.floor(Math.random() * politeEndings.length)];
-                
-                setTimeout(() => speak(phrase), 1000);
+                // VOLTAMOS AO SIMPLES: Apenas "Delícia!" para não atrapalhar a contagem
+                setTimeout(() => speak("Delícia!"), 1000);
                 state.poopMeter++; state.isPlaying = false; setTimeout(startRound, 2500);
             }
         }
@@ -872,7 +869,7 @@
                 els.blenderLiquid.style.opacity = 0;
                 playSound('eat'); 
                 
-                // Frase educada vitamina
+                // MANTIDO: Frase educada vitamina pois é uma animação longa
                 speak("Hummm, obrigado! Delícia!");
                 
                 setTimeout(() => {
