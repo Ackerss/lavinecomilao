@@ -401,29 +401,64 @@
             }
         }
 
-        // Toca lista de audios em sequencia perfeita sem delay
+        // --- FUNÇÃO NOVA: CORTE DE SILÊNCIO ---
+        // Analisa o arquivo de som e detecta onde a voz realmente começa e termina
+        function getTrimmedDetails(buffer) {
+            const data = buffer.getChannelData(0); // Pega dados brutos do som
+            const len = data.length;
+            const threshold = 0.015; // Nível de volume mínimo para considerar "voz"
+
+            let start = 0;
+            let end = len - 1;
+
+            // Avança do começo até achar som
+            while (start < len && Math.abs(data[start]) < threshold) {
+                start++;
+            }
+
+            // Recua do fim até achar som
+            while (end > start && Math.abs(data[end]) < threshold) {
+                end--;
+            }
+            
+            // Se o arquivo for mudo ou muito curto, toca inteiro
+            if (end <= start) return { offset: 0, duration: buffer.duration };
+
+            const trimStart = start / buffer.sampleRate;
+            const trimEnd = end / buffer.sampleRate;
+            const trimDuration = trimEnd - trimStart;
+
+            return { offset: trimStart, duration: trimDuration };
+        }
+
+        // Toca lista de audios em sequencia perfeita sem delay e SEM SILENCIO
         async function playAudioSequence(list) {
             if (!list || list.length === 0) return;
             if (audioCtx.state === 'suspended') await audioCtx.resume();
             
-            // 1. Carrega todos os buffers primeiro (em paralelo)
+            // 1. Carrega todos os buffers primeiro
             const promises = list.map(name => loadAudioBuffer(name));
             const buffers = await Promise.all(promises);
             
             // 2. Agenda a reprodução
-            let nextStartTime = audioCtx.currentTime;
-            
-            // Pequeno atraso para garantir que o agendamento não ficou no passado
-            if (nextStartTime < audioCtx.currentTime) nextStartTime = audioCtx.currentTime + 0.05; 
+            let nextStartTime = audioCtx.currentTime + 0.02; // Começa agora
             
             buffers.forEach(buffer => {
                 if (buffer) {
                     const source = audioCtx.createBufferSource();
                     source.buffer = buffer;
                     source.connect(audioCtx.destination);
-                    source.start(nextStartTime);
-                    // Sobrepõe um tiquinho (0.05s) para soar mais natural e remover silencio do mp3
-                    nextStartTime += Math.max(0, buffer.duration - 0.05); 
+                    
+                    // Calcula exatamente onde cortar o silencio do arquivo
+                    const trim = getTrimmedDetails(buffer);
+                    
+                    // Toca apenas a parte que tem voz
+                    // start(quando, offset_no_arquivo, duracao_do_trecho)
+                    source.start(nextStartTime, trim.offset, trim.duration);
+                    
+                    // O proximo começa logo apos a parte UTIL deste terminar
+                    // Sobrepõe 0.04s para "colar" as palavras (efeito de fala rapida)
+                    nextStartTime += (trim.duration - 0.04); 
                 }
             });
         }
@@ -436,7 +471,7 @@
             if (Array.isArray(input)) {
                 playAudioSequence(input);
             } else {
-                playAudioSequence([input]); // Trata único como lista de 1
+                playAudioSequence([input]);
             }
         }
 
